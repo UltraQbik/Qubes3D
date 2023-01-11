@@ -1,5 +1,6 @@
 #include <iostream>
 #include <array>
+#include <chrono>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -11,23 +12,35 @@
 #include "blocks.h"
 
 
-const unsigned int g_RES = 40;
+const unsigned int g_RES = 30;
 const unsigned int g_WIDTH = g_RES * 16;
 const unsigned int g_HEIGHT = g_RES * 9;
 
-const unsigned int g_MAP_SIZE_X = 64;
-const unsigned int g_MAP_SIZE_Y = 64;
-const unsigned int g_MAP_SIZE_Z = 64;
+const unsigned int g_MAP_SIZE_X = 32;
+const unsigned int g_MAP_SIZE_Y = 32;
+const unsigned int g_MAP_SIZE_Z = 32;
 
 
-Vec3<float> g_CAMP(32.0f, 32.0f, 36.0f);
+// framedelta
+float framedelta = 0.0001f;
+
+// camera position and rotation
+Vec3<float> g_CAMP(16.0f, 16.0f, 18.0f);
 Vec3<float> g_CAMR(0.0f, 0.0f, 0.0f);
+
+// world map
 std::array<std::array<std::array<Block, g_MAP_SIZE_X>, g_MAP_SIZE_Y>, g_MAP_SIZE_Z> g_MAP;
+
+// window setup
+sf::RenderWindow g_WIN(sf::VideoMode(g_WIDTH, g_HEIGHT), "Ray Tracing", sf::Style::Titlebar | sf::Style::Close);
+sf::Event g_EV;
 
 
 float cast_ray(Vec3<float>* pos, Vec3<float>* dir) {
+    // basically DDA for 3D
+
     float d = 0.0f;
-    Vec3<int64_t> rp(floorf(pos->x), floorf(pos->y), floorf(pos->z));
+    Vec3<int> rp(floorf(pos->x), floorf(pos->y), floorf(pos->z));
     Vec3<float> unit(fabsf(1 / dir->x), fabsf(1 / dir->y), fabsf(1 / dir->z));
     Vec3<float> step;
     Vec3<float> len;
@@ -67,10 +80,10 @@ float cast_ray(Vec3<float>* pos, Vec3<float>* dir) {
 
     Block blk;
     while (true) {
-        blk = g_MAP[(int)rp.z][(int)rp.y][(int)rp.x];
+        blk = g_MAP[rp.z][rp.y][rp.x];
 
         // check if block id is not air
-        if (blk.id != 0)
+        if (blk.id > 0)
             return d;
 
         if (len.x < len.y && len.x < len.z) {
@@ -101,6 +114,7 @@ float cast_ray(Vec3<float>* pos, Vec3<float>* dir) {
 Vec3<char> calculate_pixel(Vec2<float>* coord) {
     Vec3<float> dir(coord->x, 1, coord->y);
     dir = dir.norm();
+    dir = rotate_z(rotate_x(dir, g_CAMR.x), g_CAMR.z);
 
     float dist = cast_ray(&g_CAMP, &dir);
 
@@ -132,11 +146,44 @@ void generate_flatworld_map() {
 }
 
 
-int main() {
-    // window setup
-    sf::RenderWindow window(sf::VideoMode(g_WIDTH, g_HEIGHT), "Ray Tracing", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
-    sf::Event ev;
+void player_controls() {
+    // mouse controls
+    Vec2<float> mouse_movement((float)sf::Mouse::getPosition(g_WIN).x / g_WIDTH - .5f, (float)sf::Mouse::getPosition(g_WIN).y / g_HEIGHT - .5f);    // gets the amount the mouse moved
+    sf::Mouse::setPosition(sf::Vector2i(g_WIDTH / 2, g_HEIGHT / 2), g_WIN);                                                                         // snaps the mouse back to the middle of the screen
 
+    // move the camera according to mouse movement
+    g_CAMR.x = std::fmodf(g_CAMR.x - mouse_movement.y * 10 * framedelta, 3.14159265);
+    g_CAMR.z = std::fmodf(g_CAMR.z - mouse_movement.x * 10 * framedelta, 3.14159265);
+
+    std::cout << g_CAMR.x << " | " << g_CAMR.y << " | " << g_CAMR.z << "\n";
+
+    // key presses
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+        g_CAMP.x += std::cosf(g_CAMR.z + 1.5707963) * 8 * framedelta;
+        g_CAMP.y += std::sinf(g_CAMR.z + 1.5707963) * 8 * framedelta;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+        g_CAMP.x -= std::cosf(g_CAMR.z + 1.5707963) * 8 * framedelta;
+        g_CAMP.y -= std::sinf(g_CAMR.z + 1.5707963) * 8 * framedelta;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+        g_CAMP.x -= std::cosf(g_CAMR.z) * 8 * framedelta;
+        g_CAMP.y -= std::sinf(g_CAMR.z) * 8 * framedelta;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+        g_CAMP.x += std::cosf(g_CAMR.z) * 8 * framedelta;
+        g_CAMP.y += std::sinf(g_CAMR.z) * 8 * framedelta;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        g_CAMP.z += 8 * framedelta;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
+        g_CAMP.z -= 8 * framedelta;
+    }
+}
+
+
+int main() {
     // create pixel array
     sf::Uint8* pixels = new sf::Uint8[g_WIDTH * g_HEIGHT * 4];
 
@@ -147,32 +194,41 @@ int main() {
     // create the buffer sprite
     sf::Sprite bufferSprite(buffer);
 
+    // timers for calculating the framedelta
+    std::chrono::steady_clock::time_point t1, t2;
+
     // generate a simple debug map (temporary)
     generate_debug_map();
 
     // game loop
-    while (window.isOpen()) {
+    while (g_WIN.isOpen()) {
+        // timer 1
+        t1 = std::chrono::high_resolution_clock::now();
+
         // event polling
-        while (window.pollEvent(ev)) {
-            switch (ev.type) {
+        while (g_WIN.pollEvent(g_EV)) {
+            switch (g_EV.type) {
             case sf::Event::Closed:
-                window.close();
+                g_WIN.close();
                 break;
             case sf::Event::KeyPressed:
-                if (ev.key.code == sf::Keyboard::Escape)
-                    window.close();
+                if (g_EV.key.code == sf::Keyboard::Escape)
+                    g_WIN.close();
                 break;
             }
         }
 
+        // player controls
+        player_controls();
+
         // game render
-        window.clear(sf::Color(255, 255, 255, 255)); // clear the old frame
+        g_WIN.clear(sf::Color(255, 255, 255, 255)); // clear the old frame
 
         // fill the fixels
         Vec2<float> coord;
         Vec3<char> color;
         for (register int y = 0; y < g_HEIGHT; y++) {
-            coord.y = (float)y / g_HEIGHT * 2 - 1;
+            coord.y = -((float)y / g_HEIGHT * 2 - 1);
             for (register int x = 0; x < g_WIDTH; x++) {
                 coord.x = (float)x / g_WIDTH * 2 - 1;
 
@@ -185,15 +241,17 @@ int main() {
             }
         }
 
-        // more the camera
-        g_CAMP.x = std::cos(clock() / 2048.0f) * 16.0f + 32.0f;
-        g_CAMP.z = std::sin(clock() / 2048.0f) * 16.0f + 32.0f;
-
         buffer.update(pixels); // update the buffer
 
-        window.draw(bufferSprite); // blit image sprite buffer to the screen
+        g_WIN.draw(bufferSprite); // blit image sprite buffer to the screen
 
-        window.display(); // tell app that window is done drawing
+        g_WIN.display(); // tell app that window is done drawing
+
+        // timer 2
+        t2 = std::chrono::high_resolution_clock::now();
+
+        // calculate framedelta
+        framedelta = (t2 - t1).count() / 1e9;
     }
 
     // end of application

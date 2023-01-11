@@ -20,17 +20,17 @@ const unsigned int g_MAP_SIZE_Y = 64;
 const unsigned int g_MAP_SIZE_Z = 64;
 
 
-Vec3 g_CAMP(32.0f, 32.0f, 36.0f);
-Vec3 g_CAMR(0.0f, 0.0f, 0.0f);
+Vec3<float> g_CAMP(32.0f, 32.0f, 36.0f);
+Vec3<float> g_CAMR(0.0f, 0.0f, 0.0f);
 std::array<std::array<std::array<Block, g_MAP_SIZE_X>, g_MAP_SIZE_Y>, g_MAP_SIZE_Z> g_MAP;
 
 
-float cast_ray(Vec3* pos, Vec3* dir) {
+float cast_ray(Vec3<float>* pos, Vec3<float>* dir) {
     float d = 0.0f;
-    Vec3 rp(floorf(pos->x), floorf(pos->y), floorf(pos->z));
-    Vec3 unit(fabsf(1 / dir->x), fabsf(1 / dir->y), fabsf(1 / dir->z));
-    Vec3 step;
-    Vec3 len;
+    Vec3<int64_t> rp(floorf(pos->x), floorf(pos->y), floorf(pos->z));
+    Vec3<float> unit(fabsf(1 / dir->x), fabsf(1 / dir->y), fabsf(1 / dir->z));
+    Vec3<float> step;
+    Vec3<float> len;
 
     if (dir->x > 0) {
         step.x = 1.0f;
@@ -62,11 +62,11 @@ float cast_ray(Vec3* pos, Vec3* dir) {
     if (dir->y == 0) len.y = INFINITY;
     if (dir->z == 0) len.z = INFINITY;
 
+    if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1 || rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1 || rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
+        return d;
+
     Block blk;
     while (true) {
-        if (rp.x < 0 || rp.x >= g_MAP_SIZE_X || rp.y < 0 || rp.y >= g_MAP_SIZE_Y || rp.z < 0 || rp.z >= g_MAP_SIZE_Z)
-            return d;
-
         blk = g_MAP[(int)rp.z][(int)rp.y][(int)rp.x];
 
         // check if block id is not air
@@ -77,31 +77,37 @@ float cast_ray(Vec3* pos, Vec3* dir) {
             rp.x += step.x;
             d = len.x;
             len.x += unit.x;
+            if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1)
+                return d;
         }
         else if (len.y < len.z) {
             rp.y += step.y;
             d = len.y;
             len.y += unit.y;
+            if (rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1)
+                return d;
         }
         else {
             rp.z += step.z;
             d = len.z;
             len.z += unit.z;
+            if (rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
+                return d;
         }
     }
 }
 
 
-Vec3 calculate_pixel(Vec2* coord) {
-    Vec3 dir(coord->x, 1, coord->y);
+Vec3<char> calculate_pixel(Vec2<float>* coord) {
+    Vec3<float> dir(coord->x, 1, coord->y);
     dir = dir.norm();
 
     float dist = cast_ray(&g_CAMP, &dir);
 
     float brightness = 1024 / dist;
     if (brightness > 255)
-        return Vec3(255.0f, 255.0f, 255.0f);
-    return Vec3(brightness, brightness, brightness);
+        return Vec3<char>(255, 255, 255);
+    return Vec3<char>((char)brightness, (char)brightness, (char)brightness);
     
 }
 
@@ -163,8 +169,8 @@ int main() {
         window.clear(sf::Color(255, 255, 255, 255)); // clear the old frame
 
         // fill the fixels
-        Vec2 coord;
-        Vec3 color;
+        Vec2<float> coord;
+        Vec3<char> color;
         for (register int y = 0; y < g_HEIGHT; y++) {
             coord.y = (float)y / g_HEIGHT * 2 - 1;
             for (register int x = 0; x < g_WIDTH; x++) {
@@ -172,16 +178,16 @@ int main() {
 
                 color = calculate_pixel(&coord);
 
-                pixels[y * g_WIDTH * 4 + x * 4] = (sf::Uint8)color.x;
-                pixels[y * g_WIDTH * 4 + x * 4 + 1] = (sf::Uint8)color.y;
-                pixels[y * g_WIDTH * 4 + x * 4 + 2] = (sf::Uint8)color.z;
+                pixels[y * g_WIDTH * 4 + x * 4] = color.x;
+                pixels[y * g_WIDTH * 4 + x * 4 + 1] = color.y;
+                pixels[y * g_WIDTH * 4 + x * 4 + 2] = color.z;
                 pixels[y * g_WIDTH * 4 + x * 4 + 3] = 255;
             }
         }
 
         // more the camera
-        g_CAMP.x = std::cos(clock() / 1024.0f) * 8.0f + 32.0f;
-        g_CAMP.z = std::sin(clock() / 1024.0f) * 8.0f + 32.0f;
+        g_CAMP.x = std::cos(clock() / 2048.0f) * 16.0f + 32.0f;
+        g_CAMP.z = std::sin(clock() / 2048.0f) * 16.0f + 32.0f;
 
         buffer.update(pixels); // update the buffer
 

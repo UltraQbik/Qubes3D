@@ -7,7 +7,9 @@ template<typename T>
 struct Vec3 {
 	T x, y, z;
 
-	Vec3(T a = 0.0f, T b = 0.0f, T c = 0.0f) { x = a; y = b; z = c; }
+	Vec3(T a, T b, T c) { x = a; y = b; z = c; }
+	Vec3(T a) { x = a; y = a; z = a; }
+	Vec3() { x = 0.0f; y = 0.0f; z = 0.0f; }
 	float len() { return sqrtf(x * x + y * y + z * z); }
 	Vec3 norm() { return Vec3(x / this->len(), y / this->len(), z / this->len()); }
 };
@@ -64,7 +66,9 @@ template<typename T>
 struct Vec2 {
 	T x, y;
 
-	Vec2(T a = 0.0f, T b = 0.0f) { x = a; y = b; }
+	Vec2(T a, T b) { x = a; y = b; }
+	Vec2(T a) { x = a; y = a; }
+	Vec2() { x = 0.0f; y = 0.0f; }
 	float len() { return sqrtf(x * x + y * y); }
 	Vec2 norm() { return Vec2(x / this->len(), y / this->len()); }
 };
@@ -126,6 +130,16 @@ float dist(Vec3<T>& a, Vec3<T>& b) {
 template<typename T>
 float dist(Vec2<T>& a, Vec2<T>& b) {
 	return sqrtf((a->x - b->x) * (a->x - b->x) + (a->y - b->y) * (a->y - b->y));
+}
+
+template<typename T>
+Vec3<T> normalize(Vec3<T> vec) {
+	return vec.norm();
+}
+
+template<typename T>
+Vec2<T> normalize(Vec2<T> vec) {
+	return vec.norm();
 }
 
 

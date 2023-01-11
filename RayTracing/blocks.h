@@ -1,5 +1,5 @@
 #pragma once
-typedef unsigned short BLOCK_ID;
+typedef char BLOCK_ID;
 
 struct Block {
 	BLOCK_ID id = 0;				// block id (obviously)

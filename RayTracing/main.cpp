@@ -34,7 +34,7 @@ Vec3<float> g_CAMP(16.0f, 16.0f, 18.0f);
 Vec3<float> g_CAMR(0.0f, 0.0f, 0.0f);
 
 // world map
-std::array<std::array<std::array<Block, g_MAP_SIZE_X>, g_MAP_SIZE_Y>, g_MAP_SIZE_Z> g_MAP;
+std::array<std::array<std::array<BLOCK_ID, g_MAP_SIZE_X>, g_MAP_SIZE_Y>, g_MAP_SIZE_Z> g_MAP;
 
 // window setup
 sf::RenderWindow g_WIN(sf::VideoMode(g_WIDTH, g_HEIGHT), "Ray Tracing", sf::Style::Titlebar | sf::Style::Close);
@@ -83,34 +83,34 @@ float cast_ray(Vec3<float>* pos, Vec3<float>* dir) {
     if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1 || rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1 || rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
         return d;
 
-    Block* blk;
+    BLOCK_ID blk;
     while (true) {
-        blk = &g_MAP[rp.z][rp.y][rp.x];
+        blk = g_MAP[rp.z][rp.y][rp.x];
 
         // check if block id is not air
-        if (blk->id > 0)
-            return d;
+        if (blk != 0)
+            return d + 4.5e-5;
 
         if (len.x < len.y && len.x < len.z) {
             rp.x += step.x;
             d = len.x;
             len.x += unit.x;
             if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1)
-                return d;
+                return d - 4.5e-5;
         }
         else if (len.y < len.z) {
             rp.y += step.y;
             d = len.y;
             len.y += unit.y;
             if (rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1)
-                return d;
+                return d - 4.5e-5;
         }
         else {
             rp.z += step.z;
             d = len.z;
             len.z += unit.z;
             if (rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
-                return d;
+                return d - 4.5e-5;
         }
     }
 }
@@ -118,24 +118,30 @@ float cast_ray(Vec3<float>* pos, Vec3<float>* dir) {
 Vec3<float> get_normal(Vec3<float>* pos) {
     Vec3<float> normal;
 
-    normal.x = (g_MAP[(int)pos->z][(int)pos->y][(int)(pos->x - 1e-5f)].tags & 1) - (g_MAP[(int)pos->z][(int)pos->y][(int)(pos->x + 1e-5f)].tags & 1);
-    normal.y = (g_MAP[(int)pos->z][(int)(pos->y - 1e-5f)][(int)pos->x].tags & 1) - (g_MAP[(int)pos->z][(int)(pos->y + 1e-5f)][(int)pos->x].tags & 1);
-    normal.z = (g_MAP[(int)(pos->z - 1e-5f)][(int)pos->y][(int)pos->x].tags & 1) - (g_MAP[(int)(pos->z + 1e-5f)][(int)pos->y][(int)pos->x].tags & 1);
+    normal.x = (g_MAP[(int)pos->z][(int)pos->y][(int)(pos->x - 5e-5f)] != 0) - (g_MAP[(int)pos->z][(int)pos->y][(int)(pos->x + 5e-5f)] != 0);
+    normal.y = (g_MAP[(int)pos->z][(int)(pos->y - 5e-5f)][(int)pos->x] != 0) - (g_MAP[(int)pos->z][(int)(pos->y + 5e-5f)][(int)pos->x] != 0);
+    normal.z = (g_MAP[(int)(pos->z - 5e-5f)][(int)pos->y][(int)pos->x] != 0) - (g_MAP[(int)(pos->z + 5e-5f)][(int)pos->y][(int)pos->x] != 0);
 
     return normal;
 }
 
 Vec3<char> calculate_pixel(Vec2<float>* coord) {
     Vec3<float> dir(coord->x, 1, coord->y);
-    dir = dir.norm();
-    dir = rotate_z(rotate_x(dir, g_CAMR.x), g_CAMR.z);
+    dir = rotate_z(rotate_x(dir.norm(), g_CAMR.x), g_CAMR.z);
 
     float dist = cast_ray(&g_CAMP, &dir);
     Vec3<float> hit_point = dir * dist + g_CAMP;
+    
+    if (g_MAP[(int)(hit_point.z)][(int)(hit_point.y)][(int)(hit_point.x)] != 0) {         // if the block is not air
+        Vec3<float> normal = get_normal(&hit_point);
 
-    Vec3<float> normal = get_normal(&hit_point);
+        return Vec3<char>((char)(normal.x * 127.5f + 127.5f), (char)(normal.y * 127.5f + 127.5f), (char)(normal.z * 127.5f + 127.5f));
+    }
+    else {
+        float h = hit_point.z / g_MAP_SIZE_Z;
 
-    return Vec3<char>((char)(normal.x * 127.5f + 127.5f), (char)(normal.y * 127.5f + 127.5f), (char)(normal.z * 127.5f + 127.5f));
+        return Vec3<char>(0.0f, h * 200.f, h * 255.f);
+    }
 }
 
 void generate_debug_map() {
@@ -145,10 +151,7 @@ void generate_debug_map() {
         for (int j = 0; j < g_MAP_SIZE_Y; j++)
             for (int k = 0; k < g_MAP_SIZE_X; k++)
                 if (i % 8 == 0 && j % 8 == 0 && k % 8 == 0)
-                {
-                    g_MAP[i][j][k].id = rand() % 256;
-                    g_MAP[i][j][k].tags = 1;
-                }
+                    g_MAP[i][j][k] = rand() % 256;
 }
 
 void generate_flatworld_map() {
@@ -157,10 +160,7 @@ void generate_flatworld_map() {
     for (int i = 0; i < g_MAP_SIZE_Z / 2; i++)
         for (int j = 0; j < g_MAP_SIZE_Y; j++)
             for (int k = 0; k < g_MAP_SIZE_X; k++)
-            {
-                g_MAP[i][j][k].id = 1;
-                g_MAP[i][j][k].tags = 1;
-            }
+                g_MAP[i][j][k] = 1;
 }
 
 void player_controls() {
@@ -169,8 +169,8 @@ void player_controls() {
     sf::Mouse::setPosition(sf::Vector2i(g_WIDTH / 2, g_HEIGHT / 2), g_WIN);                                                                         // snaps the mouse back to the middle of the screen
 
     // move the camera according to mouse movement
-    g_CAMR.x = std::fmodf(g_CAMR.x - mouse_movement.y * g_MOUSE_SENSITIVITY * framedelta, 3.14159265);
-    g_CAMR.z = std::fmodf(g_CAMR.z - mouse_movement.x * g_MOUSE_SENSITIVITY * framedelta, 3.14159265);
+    g_CAMR.x = std::fmodf(g_CAMR.x - mouse_movement.y * g_MOUSE_SENSITIVITY * framedelta, 6.2831853);
+    g_CAMR.z = std::fmodf(g_CAMR.z - mouse_movement.x * g_MOUSE_SENSITIVITY * framedelta, 6.2831853);
 
     // std::cout << g_CAMR.x << " | " << g_CAMR.y << " | " << g_CAMR.z << "\n";
 

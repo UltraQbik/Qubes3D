@@ -23,10 +23,7 @@
     <ClInclude Include="vector.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="block_map.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ray.h">
+    <ClInclude Include="blocks.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

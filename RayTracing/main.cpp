@@ -1,6 +1,7 @@
 #include <iostream>
 #include <array>
 #include <chrono>
+#include <thread>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -12,7 +13,11 @@
 #include "blocks.h"
 
 
-const unsigned int g_RES = 30;
+const unsigned int g_FRAME_CAP = 60;
+const unsigned int g_MOUSE_SENSITIVITY = 64;
+const unsigned int g_PLAYER_SPEED = 16;
+
+const unsigned int g_RES = 80;
 const unsigned int g_WIDTH = g_RES * 16;
 const unsigned int g_HEIGHT = g_RES * 9;
 
@@ -78,12 +83,12 @@ float cast_ray(Vec3<float>* pos, Vec3<float>* dir) {
     if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1 || rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1 || rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
         return d;
 
-    Block blk;
+    Block* blk;
     while (true) {
-        blk = g_MAP[rp.z][rp.y][rp.x];
+        blk = &g_MAP[rp.z][rp.y][rp.x];
 
         // check if block id is not air
-        if (blk.id > 0)
+        if (blk->id > 0)
             return d;
 
         if (len.x < len.y && len.x < len.z) {
@@ -110,6 +115,15 @@ float cast_ray(Vec3<float>* pos, Vec3<float>* dir) {
     }
 }
 
+Vec3<float> get_normal(Vec3<float>* pos) {
+    Vec3<float> normal;
+
+    normal.x = (g_MAP[(int)pos->z][(int)pos->y][(int)(pos->x - 1e-5f)].tags & 1) - (g_MAP[(int)pos->z][(int)pos->y][(int)(pos->x + 1e-5f)].tags & 1);
+    normal.y = (g_MAP[(int)pos->z][(int)(pos->y - 1e-5f)][(int)pos->x].tags & 1) - (g_MAP[(int)pos->z][(int)(pos->y + 1e-5f)][(int)pos->x].tags & 1);
+    normal.z = (g_MAP[(int)(pos->z - 1e-5f)][(int)pos->y][(int)pos->x].tags & 1) - (g_MAP[(int)(pos->z + 1e-5f)][(int)pos->y][(int)pos->x].tags & 1);
+
+    return normal;
+}
 
 Vec3<char> calculate_pixel(Vec2<float>* coord) {
     Vec3<float> dir(coord->x, 1, coord->y);
@@ -117,14 +131,12 @@ Vec3<char> calculate_pixel(Vec2<float>* coord) {
     dir = rotate_z(rotate_x(dir, g_CAMR.x), g_CAMR.z);
 
     float dist = cast_ray(&g_CAMP, &dir);
+    Vec3<float> hit_point = dir * dist + g_CAMP;
 
-    float brightness = 1024 / dist;
-    if (brightness > 255)
-        return Vec3<char>(255, 255, 255);
-    return Vec3<char>((char)brightness, (char)brightness, (char)brightness);
-    
+    Vec3<float> normal = get_normal(&hit_point);
+
+    return Vec3<char>((char)(normal.x * 127.5f + 127.5f), (char)(normal.y * 127.5f + 127.5f), (char)(normal.z * 127.5f + 127.5f));
 }
-
 
 void generate_debug_map() {
     // This will generate just a 3D grid of blocks with random id's
@@ -133,7 +145,10 @@ void generate_debug_map() {
         for (int j = 0; j < g_MAP_SIZE_Y; j++)
             for (int k = 0; k < g_MAP_SIZE_X; k++)
                 if (i % 8 == 0 && j % 8 == 0 && k % 8 == 0)
-                    g_MAP[i][j][k] = rand() % 256;
+                {
+                    g_MAP[i][j][k].id = rand() % 256;
+                    g_MAP[i][j][k].tags = 1;
+                }
 }
 
 void generate_flatworld_map() {
@@ -142,9 +157,11 @@ void generate_flatworld_map() {
     for (int i = 0; i < g_MAP_SIZE_Z / 2; i++)
         for (int j = 0; j < g_MAP_SIZE_Y; j++)
             for (int k = 0; k < g_MAP_SIZE_X; k++)
-                g_MAP[i][j][k] = 1;
+            {
+                g_MAP[i][j][k].id = 1;
+                g_MAP[i][j][k].tags = 1;
+            }
 }
-
 
 void player_controls() {
     // mouse controls
@@ -152,33 +169,51 @@ void player_controls() {
     sf::Mouse::setPosition(sf::Vector2i(g_WIDTH / 2, g_HEIGHT / 2), g_WIN);                                                                         // snaps the mouse back to the middle of the screen
 
     // move the camera according to mouse movement
-    g_CAMR.x = std::fmodf(g_CAMR.x - mouse_movement.y * 10 * framedelta, 3.14159265);
-    g_CAMR.z = std::fmodf(g_CAMR.z - mouse_movement.x * 10 * framedelta, 3.14159265);
+    g_CAMR.x = std::fmodf(g_CAMR.x - mouse_movement.y * g_MOUSE_SENSITIVITY * framedelta, 3.14159265);
+    g_CAMR.z = std::fmodf(g_CAMR.z - mouse_movement.x * g_MOUSE_SENSITIVITY * framedelta, 3.14159265);
 
-    std::cout << g_CAMR.x << " | " << g_CAMR.y << " | " << g_CAMR.z << "\n";
+    // std::cout << g_CAMR.x << " | " << g_CAMR.y << " | " << g_CAMR.z << "\n";
 
     // key presses
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-        g_CAMP.x += std::cosf(g_CAMR.z + 1.5707963) * 8 * framedelta;
-        g_CAMP.y += std::sinf(g_CAMR.z + 1.5707963) * 8 * framedelta;
+        g_CAMP.x += std::cosf(g_CAMR.z + 1.5707963) * g_PLAYER_SPEED * framedelta;
+        g_CAMP.y += std::sinf(g_CAMR.z + 1.5707963) * g_PLAYER_SPEED * framedelta;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-        g_CAMP.x -= std::cosf(g_CAMR.z + 1.5707963) * 8 * framedelta;
-        g_CAMP.y -= std::sinf(g_CAMR.z + 1.5707963) * 8 * framedelta;
+        g_CAMP.x -= std::cosf(g_CAMR.z + 1.5707963) * g_PLAYER_SPEED * framedelta;
+        g_CAMP.y -= std::sinf(g_CAMR.z + 1.5707963) * g_PLAYER_SPEED * framedelta;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        g_CAMP.x -= std::cosf(g_CAMR.z) * 8 * framedelta;
-        g_CAMP.y -= std::sinf(g_CAMR.z) * 8 * framedelta;
+        g_CAMP.x -= std::cosf(g_CAMR.z) * g_PLAYER_SPEED * framedelta;
+        g_CAMP.y -= std::sinf(g_CAMR.z) * g_PLAYER_SPEED * framedelta;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        g_CAMP.x += std::cosf(g_CAMR.z) * 8 * framedelta;
-        g_CAMP.y += std::sinf(g_CAMR.z) * 8 * framedelta;
+        g_CAMP.x += std::cosf(g_CAMR.z) * g_PLAYER_SPEED * framedelta;
+        g_CAMP.y += std::sinf(g_CAMR.z) * g_PLAYER_SPEED * framedelta;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
         g_CAMP.z += 8 * framedelta;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
         g_CAMP.z -= 8 * framedelta;
+    }
+}
+
+void calculate_pixel_range(sf::Uint8* pixels, int begin, int end) {
+    Vec2<float> coord;
+    Vec3<char> color;
+    for (register int y = begin; y < end; y++) {
+        coord.y = -((float)y / g_HEIGHT * 2 - 1);
+        for (register int x = 0; x < g_WIDTH; x++) {
+            coord.x = (float)x / g_WIDTH * 2 - 1;
+
+            color = calculate_pixel(&coord);
+
+            pixels[y * g_WIDTH * 4 + x * 4] = color.x;
+            pixels[y * g_WIDTH * 4 + x * 4 + 1] = color.y;
+            pixels[y * g_WIDTH * 4 + x * 4 + 2] = color.z;
+            pixels[y * g_WIDTH * 4 + x * 4 + 3] = 255;
+        }
     }
 }
 
@@ -198,7 +233,10 @@ int main() {
     std::chrono::steady_clock::time_point t1, t2;
 
     // generate a simple debug map (temporary)
-    generate_debug_map();
+    generate_flatworld_map();
+
+    // delay between frames
+    float delay = 0;
 
     // game loop
     while (g_WIN.isOpen()) {
@@ -224,22 +262,20 @@ int main() {
         // game render
         g_WIN.clear(sf::Color(255, 255, 255, 255)); // clear the old frame
 
-        // fill the fixels
-        Vec2<float> coord;
-        Vec3<char> color;
-        for (register int y = 0; y < g_HEIGHT; y++) {
-            coord.y = -((float)y / g_HEIGHT * 2 - 1);
-            for (register int x = 0; x < g_WIDTH; x++) {
-                coord.x = (float)x / g_WIDTH * 2 - 1;
+        // render frame
+        std::thread worker1(calculate_pixel_range, pixels, 0, (int)(g_HEIGHT * 1 / 6));
+        std::thread worker2(calculate_pixel_range, pixels, (int)(g_HEIGHT * 1 / 6), (int)(g_HEIGHT * 2 / 6));
+        std::thread worker3(calculate_pixel_range, pixels, (int)(g_HEIGHT * 2 / 6), (int)(g_HEIGHT * 3 / 6));
+        std::thread worker4(calculate_pixel_range, pixels, (int)(g_HEIGHT * 3 / 6), (int)(g_HEIGHT * 4 / 6));
+        std::thread worker5(calculate_pixel_range, pixels, (int)(g_HEIGHT * 4 / 6), (int)(g_HEIGHT * 5 / 6));
+        std::thread worker6(calculate_pixel_range, pixels, (int)(g_HEIGHT * 5 / 6), (int)(g_HEIGHT));
 
-                color = calculate_pixel(&coord);
-
-                pixels[y * g_WIDTH * 4 + x * 4] = color.x;
-                pixels[y * g_WIDTH * 4 + x * 4 + 1] = color.y;
-                pixels[y * g_WIDTH * 4 + x * 4 + 2] = color.z;
-                pixels[y * g_WIDTH * 4 + x * 4 + 3] = 255;
-            }
-        }
+        worker1.join();
+        worker2.join();
+        worker3.join();
+        worker4.join();
+        worker5.join();
+        worker6.join();
 
         buffer.update(pixels); // update the buffer
 
@@ -251,7 +287,14 @@ int main() {
         t2 = std::chrono::high_resolution_clock::now();
 
         // calculate framedelta
-        framedelta = (t2 - t1).count() / 1e9;
+        framedelta = (t2 - t1).count() / 1e9f;
+
+        // std::cout << "FPS: " << 1 / framedelta << "\n";
+
+        // wait some time between frames
+        delay = 1000.0f / g_FRAME_CAP - framedelta * 1000;
+        if (delay > 0)
+            std::this_thread::sleep_for(std::chrono::milliseconds((long long)delay));
     }
 
     // end of application

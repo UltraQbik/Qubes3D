@@ -9,7 +9,7 @@ struct Vec3 {
 
 	Vec3(T a, T b, T c) { x = a; y = b; z = c; }
 	Vec3(T a) { x = a; y = a; z = a; }
-	Vec3() { x = 0.0f; y = 0.0f; z = 0.0f; }
+	Vec3() { x = 0; y = 0; z = 0; }
 	float len() { return sqrtf(x * x + y * y + z * z); }
 	Vec3 norm() { return Vec3(x / this->len(), y / this->len(), z / this->len()); }
 };
@@ -68,7 +68,7 @@ struct Vec2 {
 
 	Vec2(T a, T b) { x = a; y = b; }
 	Vec2(T a) { x = a; y = a; }
-	Vec2() { x = 0.0f; y = 0.0f; }
+	Vec2() { x = 0; y = 0; }
 	float len() { return sqrtf(x * x + y * y); }
 	Vec2 norm() { return Vec2(x / this->len(), y / this->len()); }
 };
@@ -132,29 +132,19 @@ float dist(Vec2<T>& a, Vec2<T>& b) {
 	return sqrtf((a->x - b->x) * (a->x - b->x) + (a->y - b->y) * (a->y - b->y));
 }
 
-template<typename T>
-Vec3<T> normalize(Vec3<T> vec) {
-	return vec.norm();
-}
 
-template<typename T>
-Vec2<T> normalize(Vec2<T> vec) {
-	return vec.norm();
-}
-
-
-Vec3<float> rotate_x(Vec3<float> point, float angle) {
+inline Vec3<float> rotate_x(const Vec3<float>& point, float angle) {
     return Vec3<float>(point.x, point.y * std::cosf(angle) - point.z * std::sinf(angle), point.z * std::cosf(angle) + point.y * std::sinf(angle));
 }
 
-Vec3<float> rotate_y(Vec3<float> point, float angle) {
+inline Vec3<float> rotate_y(const Vec3<float>& point, float angle) {
     return Vec3<float>(point.x * std::cosf(angle) - point.z * std::sinf(angle), point.y, point.z * std::cosf(angle) + point.x * std::sinf(angle));
 }
 
-Vec3<float> rotate_z(Vec3<float> point, float angle) {
+inline Vec3<float> rotate_z(const Vec3<float>& point, float angle) {
     return Vec3<float>(point.x * std::cosf(angle) - point.y * std::sinf(angle), point.y * std::cosf(angle) + point.x * std::sinf(angle), point.z);
 }
 
-Vec3<float> rotate_xyz(Vec3<float> point, Vec3<float> angle) {
+inline Vec3<float> rotate_xyz(const Vec3<float>& point, const Vec3<float>& angle) {
     return rotate_z(rotate_y(rotate_x(point, angle.x), angle.y), angle.z);
 }

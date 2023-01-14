@@ -190,13 +190,15 @@ Vec3<COLOR> calculatePixelAt(const Vec2<float>& coord) {
 
         return Vec3<COLOR>((COLOR)(n.x * 127.5 + 127.5), (COLOR)(n.y * 127.5 + 127.5), (COLOR)(n.z * 127.5 + 127.5));*/
 
-        Ray shadow_ray = rayCast(hit.fpos, -g_SUN);
+        Ray shadow_ray = rayCast(hit.fpos - dir * 1e-4f, -g_SUN);
 
         if (shadow_ray.id == 0) {       // shadow ray hit sky
             auto surf_normal = getNormal(shadow_ray.fpos);
-            float dot = vecDot(surf_normal, -g_SUN);
+            float dot = vecDot(surf_normal, g_SUN);
+            dot = dot > 1 ? 1 : dot;
+            dot = dot < 0 ? 0 : dot;
 
-            return dot > 0 ? Vec3<COLOR>((COLOR)(dot * 255.f)) : Vec3<COLOR>(0);
+            return Vec3<COLOR>((COLOR)(dot * 255.f));
         }
         else {                          // shadow ray hit block
             return Vec3<COLOR>(0);
@@ -266,7 +268,12 @@ int main() {
                     auto hit = rayCast(g_CAMERA.m_Position, dir);
                     auto normal = getNormal(hit.fpos);
 
+                    float dot = vecDot(normal, g_SUN);
+                    dot = dot > 1 ? 1 : dot;
+                    dot = dot < 0 ? 0 : dot;
+
                     printf("pos: %f, %f, %f; norm: %f, %f, %f\n", hit.fpos.x, hit.fpos.y, hit.fpos.z, normal.x, normal.y, normal.z);
+                    printf("dot: %f\n", dot);
                 }
             }
         }

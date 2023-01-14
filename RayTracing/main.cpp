@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <vector>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -178,7 +179,7 @@ Vec3<char> calculate_pixel(const Vec2<float>& coord) {
     }
 }
 
-void calculate_pixel_range(sf::Uint8* pixels, int begin, int end) {
+void calculate_pixel_range(int begin, int end) {
     Vec2<float> coord;
     Vec3<char> color;
     for (register int y = begin; y < end; y++) {
@@ -188,10 +189,10 @@ void calculate_pixel_range(sf::Uint8* pixels, int begin, int end) {
 
             color = calculate_pixel(coord);
 
-            pixels[y * g_WIN.GetWindowSize().x * 4 + x * 4] = color.x;
-            pixels[y * g_WIN.GetWindowSize().x * 4 + x * 4 + 1] = color.y;
-            pixels[y * g_WIN.GetWindowSize().x * 4 + x * 4 + 2] = color.z;
-            pixels[y * g_WIN.GetWindowSize().x * 4 + x * 4 + 3] = 255;
+            g_WIN.GetScreenBuffer()[y * g_WIN.GetWindowSize().x * 4 + x * 4] = color.x;
+            g_WIN.GetScreenBuffer()[y * g_WIN.GetWindowSize().x * 4 + x * 4 + 1] = color.y;
+            g_WIN.GetScreenBuffer()[y * g_WIN.GetWindowSize().x * 4 + x * 4 + 2] = color.z;
+            g_WIN.GetScreenBuffer()[y * g_WIN.GetWindowSize().x * 4 + x * 4 + 3] = 255;
         }
     }
 }
@@ -232,14 +233,14 @@ int main() {
 
         // camera update
         g_CAMERA.OnUpdate(framedelta);
-
+        
         // render frame
-        std::thread worker1(calculate_pixel_range, g_WIN.GetScreenBuffer(), 0, (int)(g_WIN.GetWindowSize().y * 1 / 6));
-        std::thread worker2(calculate_pixel_range, g_WIN.GetScreenBuffer(), (int)(g_WIN.GetWindowSize().y * 1 / 6), (int)(g_WIN.GetWindowSize().y * 2 / 6));
-        std::thread worker3(calculate_pixel_range, g_WIN.GetScreenBuffer(), (int)(g_WIN.GetWindowSize().y * 2 / 6), (int)(g_WIN.GetWindowSize().y * 3 / 6));
-        std::thread worker4(calculate_pixel_range, g_WIN.GetScreenBuffer(), (int)(g_WIN.GetWindowSize().y * 3 / 6), (int)(g_WIN.GetWindowSize().y * 4 / 6));
-        std::thread worker5(calculate_pixel_range, g_WIN.GetScreenBuffer(), (int)(g_WIN.GetWindowSize().y * 4 / 6), (int)(g_WIN.GetWindowSize().y * 5 / 6));
-        std::thread worker6(calculate_pixel_range, g_WIN.GetScreenBuffer(), (int)(g_WIN.GetWindowSize().y * 5 / 6), (int)(g_WIN.GetWindowSize().y));
+        std::thread worker1(calculate_pixel_range, 0, (int)(g_WIN.GetWindowSize().y * 1 / 6));
+        std::thread worker2(calculate_pixel_range, (int)(g_WIN.GetWindowSize().y * 1 / 6), (int)(g_WIN.GetWindowSize().y * 2 / 6));
+        std::thread worker3(calculate_pixel_range, (int)(g_WIN.GetWindowSize().y * 2 / 6), (int)(g_WIN.GetWindowSize().y * 3 / 6));
+        std::thread worker4(calculate_pixel_range, (int)(g_WIN.GetWindowSize().y * 3 / 6), (int)(g_WIN.GetWindowSize().y * 4 / 6));
+        std::thread worker5(calculate_pixel_range, (int)(g_WIN.GetWindowSize().y * 4 / 6), (int)(g_WIN.GetWindowSize().y * 5 / 6));
+        std::thread worker6(calculate_pixel_range, (int)(g_WIN.GetWindowSize().y * 5 / 6), (int)(g_WIN.GetWindowSize().y));
 
         worker1.join();
         worker2.join();

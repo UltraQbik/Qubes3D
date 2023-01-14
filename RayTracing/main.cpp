@@ -249,11 +249,7 @@ int main() {
         worker5.join();
         worker6.join();
 
-        buffer.update(g_WIN.GetScreenBuffer()); // update the buffer
-
-        g_WIN.GetWindow().draw(bufferSprite); // blit image sprite buffer to the screen
-
-        g_WIN.GetWindow().display(); // tell app that window is done drawing
+        g_WIN.OnUpdate();
 
         // calculating the frame delta
         t2 = std::chrono::high_resolution_clock::now();

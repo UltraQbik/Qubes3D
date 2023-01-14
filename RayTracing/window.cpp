@@ -3,12 +3,15 @@
 
 #include "window.h"
 
-Window::Window(Vec2<uint16_t> _win_size, char _fps_lim)
+Window::Window(Vec2<uint16_t> _win_size, unsigned char _fps_lim)
 	: m_Win(sf::VideoMode(_win_size.x, _win_size.y), "Qubes 3D [super]", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize) {
 	m_WindowSize = _win_size;
 	m_FpsLimit = _fps_lim;
 
 	m_ScreenBuffer = new sf::Uint8[(uint64_t)m_WindowSize.x * m_WindowSize.y * 4];
+
+	m_TextureBuffer.create(m_WindowSize.x, m_WindowSize.y);
+	m_SpriteBuffer.setTexture(m_TextureBuffer);
 
 	m_Win.setFramerateLimit(m_FpsLimit);
 	m_Win.setMouseCursorGrabbed(true);
@@ -32,4 +35,10 @@ void Window::RecalculateWindowSize(Vec2<uint16_t> _win_size) {
 
 	delete[] m_ScreenBuffer;
 	m_ScreenBuffer = new sf::Uint8[(uint64_t)m_WindowSize.x * m_WindowSize.y * 4];
+}
+
+void Window::OnUpdate() {
+	m_TextureBuffer.update(m_ScreenBuffer);			// update the texture
+	m_Win.draw(m_SpriteBuffer);						// blit the sprite on screen
+	m_Win.display();								// display everything
 }

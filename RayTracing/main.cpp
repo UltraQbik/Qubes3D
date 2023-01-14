@@ -10,23 +10,22 @@
 // #include <SFML/Network.hpp>
 
 #include "configuration.h"
-#include "map_generators.h"
+#include "world.h"
 #include "camera.h"
 #include "window.h"
 #include "vector.h"
-#include "blocks.h"
 
 // window
 Window g_WIN(Vec2<uint16_t>(1280, 720), 75);
 
 // player camera
-Camera g_CAMERA(0.5f);
+Camera g_CAMERA(g_WIN.GetWindow(), 0.8f, Vec3<float>(g_MAP_SIZE_X / 2.f, g_MAP_SIZE_Y / 2.f, g_MAP_SIZE_Z / 2.f));
+
+// world (just a chunk for now)
+Chunk g_MAP(0);
 
 // framedelta
 float framedelta = 0.0001f;
-
-// world map
-std::array<std::array<std::array<BLOCK_ID, g_MAP_SIZE_X>, g_MAP_SIZE_Y>, g_MAP_SIZE_Z> g_MAP;
 
 // ray hit data
 struct Ray { float d; BLOCK_ID id; Ray(float _d, BLOCK_ID _id) { d = _d; id = _id; } };
@@ -65,17 +64,17 @@ Ray cast_ray(const Vec3<float>& pos, const Vec3<float>& dir) {
         len.z = (pos.z - rp.z) * unit.z;
     }
 
+    if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1 || rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1 || rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
+        return Ray(0.f, 0);
+
     // quick NAN fix when multiplying by float inf
     if (dir.x == 0) len.x = INFINITY;
     if (dir.y == 0) len.y = INFINITY;
     if (dir.z == 0) len.z = INFINITY;
 
-    if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1 || rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1 || rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
-        return Ray(0.f, 0);
-
     BLOCK_ID blk;
     while (true) {
-        blk = g_MAP[rp.z][rp.y][rp.x];
+        blk = g_MAP.GetBlockAt((uint16_t)rp.x, (uint16_t)rp.y, (uint16_t)rp.z);
 
         if (blk != 0)
             return Ray(d, blk);
@@ -109,9 +108,9 @@ Vec3<float> get_normal(const Vec3<float>& pos) {
 
     Vec3<float> normal;
 
-    normal.x = (g_MAP[(int)pos.z][(int)pos.y][(int)(pos.x - 1e-5f)] != 0) - (g_MAP[(int)pos.z][(int)pos.y][(int)(pos.x + 1e-5f)] != 0);
-    normal.y = (g_MAP[(int)pos.z][(int)(pos.y - 1e-5f)][(int)pos.x] != 0) - (g_MAP[(int)pos.z][(int)(pos.y + 1e-5f)][(int)pos.x] != 0);
-    normal.z = (g_MAP[(int)(pos.z - 1e-5f)][(int)pos.y][(int)pos.x] != 0) - (g_MAP[(int)(pos.z + 1e-5f)][(int)pos.y][(int)pos.x] != 0);
+    normal.x = (g_MAP.GetBlockAt((uint16_t)pos.z, (uint16_t)pos.y, (uint16_t)(pos.x - 1e-5f)) != 0) - (g_MAP.GetBlockAt((uint16_t)pos.z, (uint16_t)pos.y, (uint16_t)(pos.x + 1e-5f)) != 0);
+    normal.y = (g_MAP.GetBlockAt((uint16_t)pos.z, (uint16_t)(pos.y - 1e-5f), (uint16_t)pos.x) != 0) - (g_MAP.GetBlockAt((uint16_t)pos.z, (uint16_t)(pos.y + 1e-5f), (uint16_t)pos.x) != 0);
+    normal.z = (g_MAP.GetBlockAt((uint16_t)(pos.z - 1e-5f), (uint16_t)pos.y, (uint16_t)pos.x) != 0) - (g_MAP.GetBlockAt((uint16_t)(pos.z + 1e-5f), (uint16_t)pos.y, (uint16_t)pos.x) != 0);
 
     return normal;
 }
@@ -123,8 +122,8 @@ Vec2<float> get_uv_tex_coord(const Vec3<float>& pos) {
     Vec3<float> n = get_normal(pos);
     Vec2<float> coord(0.f);
 
-    if (n.x != 0) {                // left/right
-        if (n.x > 0) {             // right
+    if (n.x != 0) {                 // left/right
+        if (n.x > 0) {              // right
             coord.x = 1 - p.y;
             coord.y = p.z;
         }
@@ -133,8 +132,8 @@ Vec2<float> get_uv_tex_coord(const Vec3<float>& pos) {
             coord.y = p.z;
         }
     }
-    else if (n.y != 0) {           // forward/backward
-        if (n.y > 0) {             // forward
+    else if (n.y != 0) {            // forward/backward
+        if (n.y > 0) {              // forward
             coord.x = p.x;
             coord.y = p.z;
         }
@@ -143,8 +142,8 @@ Vec2<float> get_uv_tex_coord(const Vec3<float>& pos) {
             coord.y = p.z;
         }
     }
-    else if (n.z != 0) {           // up/down
-        if (n.z > 0) {             // up
+    else if (n.z != 0) {            // up/down
+        if (n.z > 0) {              // up
             coord.x = p.x;
             coord.y = p.y;
         }
@@ -161,10 +160,10 @@ Vec3<char> calculate_pixel(const Vec2<float>& coord) {
     // calculates the pixel at the given UV coordinate
 
     Vec3<float> dir(coord.x, g_CAMERA.GetFOV(), coord.y);
-    dir = rotate_z(rotate_x(dir.norm(), g_CAMERA.GetRotation().x), g_CAMERA.GetRotation().z);       // rotates around 2 axis, the y axis will tilt the horizon (which is useless for now)
+    dir = rotate_z(rotate_x(dir.norm(), g_CAMERA.m_Rotation.x), g_CAMERA.m_Rotation.z);       // rotates around 2 axis, the y axis will tilt the horizon (which is useless for now)
 
-    Ray hit = cast_ray(g_CAMERA.GetPosition(), dir);
-    Vec3<float> hit_point = dir * hit.d + g_CAMERA.GetPosition();
+    Ray hit = cast_ray(g_CAMERA.m_Position, dir);
+    Vec3<float> hit_point = dir * hit.d + g_CAMERA.m_Position;
     
     if (hit.id != 0) {
         Vec2<float> coord = get_uv_tex_coord(hit_point);
@@ -210,18 +209,11 @@ int main() {
     // timers for calculating the framedelta
     std::chrono::steady_clock::time_point t1, t2;
 
-    // for switching maps
-    char current_map = 1;
-
     // generates a simple debug map
-    generate_debug_map(g_MAP);
-
-    // delay between frames
-    float delay = 0;
+    generate_debug_chunk(g_MAP);
 
     // game loop
     while (g_WIN.GetWindow().isOpen()) {
-        // timer 1
         t1 = std::chrono::high_resolution_clock::now();
 
         // event polling
@@ -238,7 +230,7 @@ int main() {
         }
 
         // camera update
-        g_CAMERA.OnUpdate(g_WIN.GetWindow(), framedelta);
+        g_CAMERA.OnUpdate(framedelta);
 
         // render frame
         std::thread worker1(calculate_pixel_range, g_WIN.GetScreenBuffer(), 0, (int)(g_WIN.GetWindowSize().y * 1 / 6));
@@ -261,10 +253,8 @@ int main() {
 
         g_WIN.GetWindow().display(); // tell app that window is done drawing
 
-        // timer 2
+        // calculating the frame delta
         t2 = std::chrono::high_resolution_clock::now();
-
-        // calculate framedelta
         framedelta = (t2 - t1).count() / 1e9f;
     }
 

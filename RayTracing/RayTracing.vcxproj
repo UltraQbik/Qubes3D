@@ -138,12 +138,12 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="window.cpp" />
+    <ClCompile Include="world.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="blocks.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="configuration.h" />
-    <ClInclude Include="map_generators.h" />
+    <ClInclude Include="world.h" />
     <ClInclude Include="vector.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>

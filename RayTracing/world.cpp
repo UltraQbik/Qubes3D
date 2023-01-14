@@ -13,22 +13,28 @@ Chunk::Chunk(BLOCK_ID _fill) {
 }
 
 BLOCK_ID Chunk::GetBlockAt(Vec3<uint16_t> _pos) {
-    return m_BlockArray[_pos.x + _pos.y * g_CHUNK_SIZE_X + _pos.z * g_CHUNK_SIZE_X * g_CHUNK_SIZE_Y];
+    if (_pos.x > 0 && _pos.x < g_CHUNK_SIZE_X && _pos.y > 0 && _pos.y < g_CHUNK_SIZE_Y && _pos.z > 0 && _pos.z < g_CHUNK_SIZE_Z)
+        return m_BlockArray[_pos.x + _pos.y * g_CHUNK_SIZE_X + _pos.z * g_CHUNK_SIZE_X * g_CHUNK_SIZE_Y];
+    return 0;
 }
 
 BLOCK_ID Chunk::GetBlockAt(uint16_t _x, uint16_t _y, uint16_t _z) {
-    return m_BlockArray[_x + _y * g_CHUNK_SIZE_X + _z * g_CHUNK_SIZE_X * g_CHUNK_SIZE_Y];
+    if (_x > 0 && _x < g_CHUNK_SIZE_X && _y > 0 && _y < g_CHUNK_SIZE_Y && _z > 0 && _z < g_CHUNK_SIZE_Z)
+        return m_BlockArray[_x + _y * g_CHUNK_SIZE_X + _z * g_CHUNK_SIZE_X * g_CHUNK_SIZE_Y];
+    return 0;
 }
 
 void Chunk::SetBlockAt(Vec3<uint16_t> _pos, BLOCK_ID _id) {
-    m_BlockArray[_pos.x + _pos.y * g_CHUNK_SIZE_X + _pos.z * g_CHUNK_SIZE_X * g_CHUNK_SIZE_Y] = _id;
+    if (_pos.x > 0 && _pos.x < g_CHUNK_SIZE_X && _pos.y > 0 && _pos.y < g_CHUNK_SIZE_Y && _pos.z > 0 && _pos.z < g_CHUNK_SIZE_Z)
+        m_BlockArray[_pos.x + _pos.y * g_CHUNK_SIZE_X + _pos.z * g_CHUNK_SIZE_X * g_CHUNK_SIZE_Y] = _id;
 }
 
 void Chunk::SetBlockAt(uint16_t _x, uint16_t _y, uint16_t _z, BLOCK_ID _id) {
-    m_BlockArray[_x + _y * g_CHUNK_SIZE_X + _z * g_CHUNK_SIZE_X * g_CHUNK_SIZE_Y] = _id;
+    if (_x > 0 && _x < g_CHUNK_SIZE_X && _y > 0 && _y < g_CHUNK_SIZE_Y && _z > 0 && _z < g_CHUNK_SIZE_Z)
+        m_BlockArray[_x + _y * g_CHUNK_SIZE_X + _z * g_CHUNK_SIZE_X * g_CHUNK_SIZE_Y] = _id;
 }
 
-void generate_empty_chunk(Chunk& _chunk) {
+void generateEmptyChunk(Chunk& _chunk) {
     for (uint16_t i = 0; i < g_CHUNK_SIZE_Z; i++)
         for (uint16_t j = 0; j < g_CHUNK_SIZE_Y; j++)
             for (uint16_t k = 0; k < g_CHUNK_SIZE_X; k++)
@@ -36,7 +42,7 @@ void generate_empty_chunk(Chunk& _chunk) {
                     _chunk.SetBlockAt(k, j, i, 0);
 }
 
-void generate_debug_chunk(Chunk& _chunk) {
+void generateDebugChunk(Chunk& _chunk) {
     for (uint16_t i = 0; i < g_CHUNK_SIZE_Z; i++)
         for (uint16_t j = 0; j < g_CHUNK_SIZE_Y; j++)
             for (uint16_t k = 0; k < g_CHUNK_SIZE_X; k++)
@@ -44,7 +50,7 @@ void generate_debug_chunk(Chunk& _chunk) {
                     _chunk.SetBlockAt(k, j, i, rand() % 256);
 }
 
-void generate_flat_chunk(Chunk& _chunk) {
+void generateFlatChunk(Chunk& _chunk) {
     for (uint16_t i = 0; i < g_CHUNK_SIZE_Z / 2; i++)
         for (uint16_t j = 0; j < g_CHUNK_SIZE_Y; j++)
             for (uint16_t k = 0; k < g_CHUNK_SIZE_X; k++)

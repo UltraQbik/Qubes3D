@@ -19,6 +19,6 @@ private:
 };
 
 
-void generate_empty_chunk(Chunk& _chunk);
-void generate_debug_chunk(Chunk& _chunk);
-void generate_flat_chunk(Chunk& _chunk);
+void generateEmptyChunk(Chunk& _chunk);
+void generateDebugChunk(Chunk& _chunk);
+void generateFlatChunk(Chunk& _chunk);

@@ -27,6 +27,12 @@ auto operator-(const Vec3<T1>& lhs, const Vec3<T2>& rhs) -> Vec3<decltype(std::d
 	return { lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z };
 }
 
+template<typename T1>
+auto operator-(const Vec3<T1>& lhs) -> Vec3<decltype(-std::declval<T1>())>
+{
+	return { -lhs.x, -lhs.y, -lhs.z };
+}
+
 template<typename T1, typename T2>
 auto operator*(const Vec3<T1>& lhs, const Vec3<T2>& rhs) -> Vec3<decltype(std::declval<T1>() * std::declval<T2>())>
 {
@@ -86,6 +92,12 @@ auto operator-(const Vec2<T1>& lhs, const Vec2<T2>& rhs) -> Vec2<decltype(std::d
 	return { lhs.x - rhs.x, lhs.y - rhs.y };
 }
 
+template<typename T1>
+auto operator-(const Vec2<T1>& lhs) -> Vec2<decltype(-std::declval<T1>())>
+{
+	return { -lhs.x, -lhs.y };
+}
+
 template<typename T1, typename T2>
 auto operator*(const Vec2<T1>& lhs, const Vec2<T2>& rhs) -> Vec2<decltype(std::declval<T1>()* std::declval<T2>())>
 {
@@ -124,28 +136,38 @@ Vec2<T1> operator*(const T2& val, const Vec2<T1>& vec)
 
 
 template<typename T>
-float dist(Vec3<T>& a, Vec3<T>& b) {
-	return sqrtf((a->x - b->x) * (a->x - b->x) + (a->y - b->y) * (a->y - b->y) + (a->z - b->z) * (a->z - b->z));
+float dist(const Vec3<T>& a, const Vec3<T>& b) {
+	return sqrtf((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
 }
 
 template<typename T>
-float dist(Vec2<T>& a, Vec2<T>& b) {
-	return sqrtf((a->x - b->x) * (a->x - b->x) + (a->y - b->y) * (a->y - b->y));
+float vecDot(const Vec3<T>& a, const Vec3<T>& b) {
+	return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z);
+}
+
+template<typename T>
+float dist(const Vec2<T>& a, const Vec2<T>& b) {
+	return sqrtf((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+
+template<typename T>
+float vecDot(const Vec2<T>& a, const Vec2<T>& b) {
+	return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
 
 
-inline Vec3<float> rotate_x(const Vec3<float>& point, float angle) {
+inline Vec3<float> rotateX(const Vec3<float>& point, float angle) {
     return Vec3<float>(point.x, point.y * std::cosf(angle) - point.z * std::sinf(angle), point.z * std::cosf(angle) + point.y * std::sinf(angle));
 }
 
-inline Vec3<float> rotate_y(const Vec3<float>& point, float angle) {
+inline Vec3<float> rotateY(const Vec3<float>& point, float angle) {
     return Vec3<float>(point.x * std::cosf(angle) - point.z * std::sinf(angle), point.y, point.z * std::cosf(angle) + point.x * std::sinf(angle));
 }
 
-inline Vec3<float> rotate_z(const Vec3<float>& point, float angle) {
+inline Vec3<float> rotateZ(const Vec3<float>& point, float angle) {
     return Vec3<float>(point.x * std::cosf(angle) - point.y * std::sinf(angle), point.y * std::cosf(angle) + point.x * std::sinf(angle), point.z);
 }
 
-inline Vec3<float> rotate_xyz(const Vec3<float>& point, const Vec3<float>& angle) {
-    return rotate_z(rotate_y(rotate_x(point, angle.x), angle.y), angle.z);
+inline Vec3<float> rotateXYZ(const Vec3<float>& point, const Vec3<float>& angle) {
+    return rotateZ(rotateY(rotateX(point, angle.x), angle.y), angle.z);
 }

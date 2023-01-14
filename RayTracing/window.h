@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <SFML/Graphics.hpp>
 
 #include "vector.h"
@@ -11,11 +12,16 @@ public:
 	void RecalculateWindowSize(Vec2<uint16_t> _win_size);
 	void OnUpdate();
 
+	float GetFrameDelta() { return m_FrameDelta; }
+
 	sf::RenderWindow& GetWindow() { return m_Win; }
 	sf::Uint8* GetScreenBuffer() { return m_ScreenBuffer; }
 	const Vec2<uint16_t>& GetWindowSize() const { return m_WindowSize; }
 private:
 	char m_FpsLimit;
+
+	float m_FrameDelta;
+	std::chrono::steady_clock::time_point m_Timer = std::chrono::high_resolution_clock::now();
 
 	sf::RenderWindow m_Win;
 

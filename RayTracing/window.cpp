@@ -41,4 +41,7 @@ void Window::OnUpdate() {
 	m_TextureBuffer.update(m_ScreenBuffer);			// update the texture
 	m_Win.draw(m_SpriteBuffer);						// blit the sprite on screen
 	m_Win.display();								// display everything
+
+	m_FrameDelta = (std::chrono::high_resolution_clock::now() - m_Timer).count() / 1e-9f;
+	m_Timer = std::chrono::high_resolution_clock::now();
 }

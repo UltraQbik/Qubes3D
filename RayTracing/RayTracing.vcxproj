@@ -137,12 +137,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="noise.cpp" />
     <ClCompile Include="window.cpp" />
     <ClCompile Include="world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="configuration.h" />
+    <ClInclude Include="noise.h" />
     <ClInclude Include="world.h" />
     <ClInclude Include="vector.h" />
     <ClInclude Include="window.h" />

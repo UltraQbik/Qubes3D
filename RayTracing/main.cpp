@@ -1,5 +1,4 @@
 #include <iostream>
-#include <array>
 #include <chrono>
 #include <thread>
 
@@ -10,10 +9,12 @@
 // #include <SFML/Network.hpp>
 
 #include "configuration.h"
-#include "world.h"
 #include "camera.h"
 #include "window.h"
 #include "vector.h"
+#include "world.h"
+#include "noise.h"
+
 
 // window
 Window g_WIN(Vec2<uint16_t>(1280, 720), 75);

@@ -21,3 +21,6 @@ private:
 
 	void GenerateNoise();
 };
+
+
+float MathNoise(float _seed);

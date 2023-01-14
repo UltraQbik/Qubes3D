@@ -3,9 +3,6 @@
 #include "vector.h"
 
 
-typedef unsigned char BLOCK_ID;
-
-
 class Chunk {
 public:
     Chunk(BLOCK_ID _fill);

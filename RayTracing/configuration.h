@@ -2,6 +2,10 @@
 #include <stdint.h>
 
 
+typedef unsigned char BLOCK_ID;
+typedef char COLOR;
+
+
 constexpr float g_CAMERA_SPEED = 12.f;
 constexpr float g_CAMERA_SHIFT_MUL = 1.8f;
 

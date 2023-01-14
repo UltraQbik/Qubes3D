@@ -158,7 +158,7 @@ Vec2<float> get_uv_tex_coord(const Vec3<float>& pos) {
     return coord;
 }
 
-Vec3<char> calculate_pixel(const Vec2<float>& coord) {
+Vec3<COLOR> calculate_pixel(const Vec2<float>& coord) {
     // calculates the pixel at the given UV coordinate
 
     Vec3<float> dir(coord.x, g_CAMERA.GetFOV(), coord.y);
@@ -168,24 +168,24 @@ Vec3<char> calculate_pixel(const Vec2<float>& coord) {
     Vec3<float> hit_point = dir * hit.d + g_CAMERA.m_Position;
     
     if (hit.id != 0) {
-        Vec2<float> coord = get_uv_tex_coord(hit_point);
+        // Vec2<float> coord = get_uv_tex_coord(hit_point);
 
-        return Vec3<char>((char)(coord.x * 255), (char)(coord.y * 255), (char)(0));
+        return Vec3<COLOR>(10);
     }
     else {
         float h = hit_point.z / g_MAP_SIZE_Z;
 
-        return Vec3<char>(0, (char)(h * 200.f), (char)(h * 255.f));
+        return Vec3<COLOR>(0, (COLOR)(h * 200.f), (COLOR)(h * 255.f));
     }
 }
 
 void calculate_pixel_range(int begin, int end) {
     Vec2<float> coord;
-    Vec3<char> color;
+    Vec3<COLOR> color;
     for (register int y = begin; y < end; y++) {
         coord.y = -((float)y / g_WIN.GetWindowSize().y * 2 - 1);
         for (register int x = 0; x < g_WIN.GetWindowSize().x; x++) {
-            coord.x = (float)x / g_WIN.GetWindowSize().x * 2 - 1;
+            coord.x = ((float)x / g_WIN.GetWindowSize().x * 2 - 1) * ((float)g_WIN.GetWindowSize().x / g_WIN.GetWindowSize().y);
 
             color = calculate_pixel(coord);
 
@@ -200,13 +200,6 @@ void calculate_pixel_range(int begin, int end) {
 int main() {
     // events
     sf::Event ev;
-
-    // create buffer texture that we will update
-    sf::Texture buffer;
-    buffer.create(g_WIN.GetWindowSize().x, g_WIN.GetWindowSize().y);
-
-    // create the buffer sprite
-    sf::Sprite bufferSprite(buffer);
 
     // timers for calculating the framedelta
     std::chrono::steady_clock::time_point t1, t2;
@@ -249,6 +242,7 @@ int main() {
         worker5.join();
         worker6.join();
 
+        // update the window
         g_WIN.OnUpdate();
 
         // calculating the frame delta

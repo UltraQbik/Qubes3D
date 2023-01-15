@@ -47,7 +47,3 @@ float NoiseMap2D::GetNoiseAt(uint16_t _x, uint16_t _y) {
 float NoiseMap2D::GetNoiseAt(Vec2<uint16_t> _pos) {
 	return m_NoiseMap[_pos.x + _pos.y * m_Size.x];
 }
-
-float MathNoise(float _seed) {
-	return std::fabsf(std::sinf(_seed * 5444343332.235f));
-}

@@ -3,10 +3,16 @@
 
 #include "window.h"
 
+#include <iostream>
+
+
 Window::Window(Vec2<uint16_t> _win_size, unsigned char _fps_lim)
 	: m_Win(sf::VideoMode(_win_size.x, _win_size.y), "Qubes 3D [super]", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize) {
 	m_WindowSize = _win_size;
 	m_FpsLimit = _fps_lim;
+
+	m_FrameDelta = 0.00001f;
+	m_Timer = std::chrono::high_resolution_clock::now();
 
 	m_ScreenBuffer = new sf::Uint8[(uint64_t)m_WindowSize.x * m_WindowSize.y * 4];
 
@@ -42,6 +48,6 @@ void Window::OnUpdate() {
 	m_Win.draw(m_SpriteBuffer);						// blit the sprite on screen
 	m_Win.display();								// display everything
 
-	m_FrameDelta = (std::chrono::high_resolution_clock::now() - m_Timer).count() / 1e-9f;
+	m_FrameDelta = (std::chrono::high_resolution_clock::now() - m_Timer).count() / 1e9f;
 	m_Timer = std::chrono::high_resolution_clock::now();
 }

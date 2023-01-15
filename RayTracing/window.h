@@ -21,7 +21,7 @@ private:
 	char m_FpsLimit;
 
 	float m_FrameDelta;
-	std::chrono::steady_clock::time_point m_Timer = std::chrono::high_resolution_clock::now();
+	std::chrono::steady_clock::time_point m_Timer;
 
 	sf::RenderWindow m_Win;
 

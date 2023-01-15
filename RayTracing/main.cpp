@@ -15,22 +15,20 @@
 #include "vector.h"
 #include "world.h"
 #include "noise.h"
+#include "math.h"
 
 
 // window
 Window g_WIN(Vec2<uint16_t>(1280, 720), 75);
 
 // player camera
-Camera g_CAMERA(g_WIN.GetWindow(), 0.8f, Vec3<float>(g_MAP_SIZE_X / 2.f, g_MAP_SIZE_Y / 2.f, g_MAP_SIZE_Z / 2.f + 1));
+Camera g_CAMERA(g_WIN.GetWindow(), 0.8f, Vec3<float>(g_CHUNK_SIZE_X / 2.f, g_CHUNK_SIZE_Y / 2.f, g_CHUNK_SIZE_Z / 2.f + 1));
 
 // world (just a chunk for now)
 Chunk g_MAP(0);
 
 // sun vector (temp)
 const Vec3<float> g_SUN = Vec3<float>(1.f, 1.f, -1.f).norm();
-
-// framedelta
-float framedelta = 0.0001f;
 
 
 // ray hit data
@@ -82,7 +80,7 @@ Ray rayCast(const Vec3<float>& pos, const Vec3<float>& dir) {
         len.z = (pos.z - rp.z) * unit.z;
     }
 
-    if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1 || rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1 || rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
+    if (rp.x <= 0 || rp.x >= g_CHUNK_SIZE_X || rp.y <= 0 || rp.y >= g_CHUNK_SIZE_Y || rp.z <= 0 || rp.z >= g_CHUNK_SIZE_Z)
         return Ray(0.f, 0, rp, pos);
 
     // quick NAN fix when multiplying by float inf
@@ -101,21 +99,21 @@ Ray rayCast(const Vec3<float>& pos, const Vec3<float>& dir) {
             rp.x += (int)step.x;
             d = len.x;
             len.x += unit.x;
-            if (rp.x < 0 || rp.x > g_MAP_SIZE_X - 1)
+            if (rp.x <= 0 || rp.x >= g_CHUNK_SIZE_X)
                 return Ray(d, 0, rp, d * dir + pos);
         }
         else if (len.y < len.z) {
             rp.y += (int)step.y;
             d = len.y;
             len.y += unit.y;
-            if (rp.y < 0 || rp.y > g_MAP_SIZE_Y - 1)
+            if (rp.y <= 0 || rp.y >= g_CHUNK_SIZE_Y)
                 return Ray(d, 0, rp, d * dir + pos);
         }
         else {
             rp.z += (int)step.z;
             d = len.z;
             len.z += unit.z;
-            if (rp.z < 0 || rp.z > g_MAP_SIZE_Z - 1)
+            if (rp.z <= 0 || rp.z >= g_CHUNK_SIZE_Z)
                 return Ray(d, 0, rp, d * dir + pos);
         }
     }
@@ -185,28 +183,28 @@ Vec3<COLOR> calculatePixelAt(const Vec2<float>& coord) {
 
     Ray hit = rayCast(g_CAMERA.m_Position, dir);
     
-    if (hit.id != 0) {      // hit block
+    if (hit.id != 0) {  // hit block
         /*auto n = get_normal(hit.fpos);
 
         return Vec3<COLOR>((COLOR)(n.x * 127.5 + 127.5), (COLOR)(n.y * 127.5 + 127.5), (COLOR)(n.z * 127.5 + 127.5));*/
 
         Ray shadow_ray = rayCast(hit.fpos - dir * 1e-4f, -g_SUN);
 
-        if (shadow_ray.id == 0) {       // shadow ray hit sky
+        if (shadow_ray.id == 0) {  // shadow ray hit sky
             auto surf_normal = getNormal(shadow_ray.fpos);
-            float dot = vecDot(surf_normal, g_SUN);
-            dot = dot > 1 ? 1 : dot;
-            dot = dot < 0 ? 0 : dot;
+            float dot = smoothstep(vecDot(surf_normal, g_SUN));  // calculates how similar the sun and the normal vectors are
 
             return Vec3<COLOR>((COLOR)(dot * 255.f));
         }
-        else {                          // shadow ray hit block
-            return Vec3<COLOR>(0);
+        else {  // shadow ray hit block
+            float brightness = smoothstep(shadow_ray.d / 8.f);
+            brightness *= brightness;
+
+            return Vec3<COLOR>((COLOR)(brightness * 255.f));
         }
     }
-    else {      // hit sky
-        float h = hit.fpos.z / g_MAP_SIZE_Z + 0.2f;
-        h = h > 1 ? 1 : h;
+    else {  // hit sky
+        float h = smoothstep(hit.fpos.z / g_MAP_SIZE_Z + 0.2f);
 
         return Vec3<COLOR>(0, (COLOR)(h * 200.f), (COLOR)(h * 255.f));
     }
@@ -234,16 +232,11 @@ int main() {
     // events
     sf::Event ev;
 
-    // timers for calculating the framedelta
-    std::chrono::steady_clock::time_point t1, t2;
-
     // generates a simple debug map
     generateFlatChunk(g_MAP);
 
     // game loop
     while (g_WIN.GetWindow().isOpen()) {
-        t1 = std::chrono::high_resolution_clock::now();
-
         // event polling
         while (g_WIN.GetWindow().pollEvent(ev)) {
             switch (ev.type) {
@@ -268,18 +261,14 @@ int main() {
                     auto hit = rayCast(g_CAMERA.m_Position, dir);
                     auto normal = getNormal(hit.fpos);
 
-                    float dot = vecDot(normal, g_SUN);
-                    dot = dot > 1 ? 1 : dot;
-                    dot = dot < 0 ? 0 : dot;
-
                     printf("pos: %f, %f, %f; norm: %f, %f, %f\n", hit.fpos.x, hit.fpos.y, hit.fpos.z, normal.x, normal.y, normal.z);
-                    printf("dot: %f\n", dot);
+                    printf("dot: %f\n", smoothstep(vecDot(normal, g_SUN)));
                 }
             }
         }
 
         // camera update
-        g_CAMERA.OnUpdate(framedelta);
+        g_CAMERA.OnUpdate(g_WIN.GetFrameDelta());
         
         // render frame
         std::thread worker1(calculatePixelRange, 0, (int)(g_WIN.GetWindowSize().y * 1 / 8));
@@ -302,10 +291,6 @@ int main() {
 
         // update the window
         g_WIN.OnUpdate();
-
-        // calculating the frame delta
-        t2 = std::chrono::high_resolution_clock::now();
-        framedelta = (t2 - t1).count() / 1e9f;
     }
 
     // end of application

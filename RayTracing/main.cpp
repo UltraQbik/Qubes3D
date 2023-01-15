@@ -28,7 +28,7 @@ Camera g_CAMERA(g_WIN.GetWindow(), 0.8f, Vec3<float>(g_CHUNK_SIZE_X / 2.f, g_CHU
 Chunk g_MAP(0);
 
 // sun vector (temp)
-const Vec3<float> g_SUN = Vec3<float>(1.f, 1.f, -1.f).norm();
+static Vec3<float> g_SUN = Vec3<float>(2.f, 3.f, -4.f).norm();
 
 
 // ray hit data
@@ -120,8 +120,6 @@ Ray rayCast(const Vec3<float>& pos, const Vec3<float>& dir) {
 }
 
 Vec3<float> getNormal(const Vec3<float>& pos) {
-    // calculates the normal at the given XYZ position
-
     Vec3<float> normal;
 
     normal.x = (g_MAP.GetBlockAt((uint16_t)(pos.x - 2.5e-5f), (uint16_t)(pos.y), (uint16_t)(pos.z)) == 0) - (g_MAP.GetBlockAt((uint16_t)(pos.x + 2.5e-5f), (uint16_t)(pos.y), (uint16_t)(pos.z)) == 0);
@@ -131,39 +129,36 @@ Vec3<float> getNormal(const Vec3<float>& pos) {
     return normal;
 }
 
-Vec2<float> getUVTextureCoord(const Vec3<float>& pos) {
-    // calculates the uv texture coordinate at the given XYZ position
-
+Vec2<float> getUVTextureCoord(const Vec3<float>& pos, const Vec3<float>& normal) {
     Vec3<float> p(pos.x - (int)pos.x, pos.y - (int)pos.y, pos.z - (int)pos.z);
-    Vec3<float> n = getNormal(pos);
     Vec2<float> coord(0.f);
 
-    if (n.x != 0) {                 // left/right
-        if (n.x > 0) {              // right
+    if (normal.x != 0) {        // left/right
+        if (normal.x > 0) {     // right
             coord.x = 1 - p.y;
             coord.y = p.z;
         }
-        else {                      // left
+        else {                  // left
             coord.x = p.y;
             coord.y = p.z;
         }
     }
-    else if (n.y != 0) {            // forward/backward
-        if (n.y > 0) {              // forward
+    else if (normal.y != 0) {   // forward/backward
+        if (normal.y > 0) {     // forward
             coord.x = p.x;
             coord.y = p.z;
         }
-        else {                      // backward
+        else {                  // backward
             coord.x = 1 - p.x;
             coord.y = p.z;
         }
     }
-    else if (n.z != 0) {            // up/down
-        if (n.z > 0) {              // up
+    else if (normal.z != 0) {   // up/down
+        if (normal.z > 0) {     // up
             coord.x = p.x;
             coord.y = p.y;
         }
-        else {                      // down
+        else {                  // down
             coord.x = 1 - p.x;
             coord.y = 1 - p.y;
         }
@@ -172,39 +167,46 @@ Vec2<float> getUVTextureCoord(const Vec3<float>& pos) {
     return coord;
 }
 
-Vec3<COLOR> calculatePixelAt(const Vec2<float>& coord) {
-    // calculates the pixel at the given UV coordinate
+Vec2<float> getUVTextureCoord(const Vec3<float>& pos) {
+    return getUVTextureCoord(pos, getNormal(pos));
+}
 
-    if (fabsf(coord.x) < 0.01 && fabsf(coord.y) < 0.01)     // adds a tiny cursor
+Vec3<COLOR> calculatePixelAt(const Vec2<float>& coord) {
+    // add a tiny cursor
+    if (fabsf(coord.x) < 0.01 && fabsf(coord.y) < 0.01)
         return Vec3<COLOR>(255, 0, 255);
 
+    // calculate ray direction
     Vec3<float> dir(coord.x, g_CAMERA.GetFOV(), coord.y);
-    dir = rotateZ(rotateX(dir.norm(), g_CAMERA.m_Rotation.x), g_CAMERA.m_Rotation.z);       // rotates around 2 axis, the y axis will tilt the horizon (which is useless for now)
+    dir = rotateZ(rotateX(dir.norm(), g_CAMERA.m_Rotation.x), g_CAMERA.m_Rotation.z);
 
-    Ray hit = rayCast(g_CAMERA.m_Position, dir);
-    
-    if (hit.id != 0) {  // hit block
-        /*auto n = get_normal(hit.fpos);
+    // cast main ray
+    Ray main_ray = rayCast(g_CAMERA.m_Position, dir);
 
-        return Vec3<COLOR>((COLOR)(n.x * 127.5 + 127.5), (COLOR)(n.y * 127.5 + 127.5), (COLOR)(n.z * 127.5 + 127.5));*/
+    if (main_ray.id != 0) {  // hit block
+        // cast shadow ray (the ray that calculates the shadow)
+        Vec3<float> shadow_hit_pos = main_ray.fpos - dir * 5e-5f;
+        Ray shadow_ray = rayCast(shadow_hit_pos, -g_SUN);
 
-        Ray shadow_ray = rayCast(hit.fpos - dir * 1e-4f, -g_SUN);
+        // TODO: add textures
+        Vec3<float> surf_norm = getNormal(main_ray.fpos);
+        // Vec2<float> coord = getUVTextureCoord(main_ray.fpos, surf_norm);
 
-        if (shadow_ray.id == 0) {  // shadow ray hit sky
-            auto surf_normal = getNormal(shadow_ray.fpos);
-            float dot = smoothstep(vecDot(surf_normal, g_SUN));  // calculates how similar the sun and the normal vectors are
+        // calculates how similar the sun and the normal vectors are
+        float dot = smoothstep(vecDot(surf_norm, g_SUN), g_AMBIENT);
 
-            return Vec3<COLOR>((COLOR)(dot * 255.f));
+        float brightness = 0.f;
+        if (shadow_ray.id == 0) {  // shadow ray didn't hit a block
+            brightness = dot;
         }
-        else {  // shadow ray hit block
-            float brightness = smoothstep(shadow_ray.d / 8.f);
-            brightness *= brightness;
-
-            return Vec3<COLOR>((COLOR)(brightness * 255.f));
+        else {  // shadow ray hit a block
+            brightness = smoothstep(1 / q_isqrt(shadow_ray.d), g_AMBIENT, 1.f, 0.f, 2.f) * dot;
         }
+
+        return Vec3<COLOR>((COLOR)(clamp(brightness, g_AMBIENT) * 255.f));
     }
-    else {  // hit sky
-        float h = smoothstep(hit.fpos.z / g_MAP_SIZE_Z + 0.2f);
+    else {  // didn't hit a block
+        float h = smoothstep((dir.z * 16.f + 16.f) / g_MAP_SIZE_Z, .2f);
 
         return Vec3<COLOR>(0, (COLOR)(h * 200.f), (COLOR)(h * 255.f));
     }
@@ -254,15 +256,21 @@ int main() {
                     auto normal = getNormal(hit.fpos);
 
                     g_MAP.SetBlockAt(hit.ipos.x - normal.x, hit.ipos.y - normal.y, hit.ipos.z - normal.z, 1);
-                    printf("%f, %f, %f\n", normal.x, normal.y, normal.z);
                 }
                 if (ev.mouseButton.button == sf::Mouse::Right) {
                     Vec3<float> dir = rotateZ(rotateX(Vec3<float>(0.f, 1.f, 0.f), g_CAMERA.m_Rotation.x), g_CAMERA.m_Rotation.z);
                     auto hit = rayCast(g_CAMERA.m_Position, dir);
                     auto normal = getNormal(hit.fpos);
 
+                    g_MAP.SetBlockAt(hit.ipos.x, hit.ipos.y, hit.ipos.z, 0);
+                }
+                if (ev.mouseButton.button == sf::Mouse::Middle) {
+                    Vec3<float> dir = rotateZ(rotateX(Vec3<float>(0.f, 1.f, 0.f), g_CAMERA.m_Rotation.x), g_CAMERA.m_Rotation.z);
+                    auto hit = rayCast(g_CAMERA.m_Position, dir);
+                    auto normal = getNormal(hit.fpos);
+
                     printf("pos: %f, %f, %f; norm: %f, %f, %f\n", hit.fpos.x, hit.fpos.y, hit.fpos.z, normal.x, normal.y, normal.z);
-                    printf("dot: %f\n", smoothstep(vecDot(normal, g_SUN)));
+                    printf("dot: %f\n", smoothstep(vecDot(getNormal(hit.fpos), g_SUN)));
                 }
             }
         }

@@ -2,6 +2,8 @@
 #include <type_traits>
 #include <cmath>
 
+#include "math.h"
+
 
 
 template<typename T>
@@ -11,8 +13,8 @@ struct Vec3 {
 	Vec3(T a, T b, T c) { x = a; y = b; z = c; }
 	Vec3(T a) { x = a; y = a; z = a; }
 	Vec3() { x = 0; y = 0; z = 0; }
-	float len() { return sqrtf(x * x + y * y + z * z); }
-	Vec3 norm() { return Vec3(x / this->len(), y / this->len(), z / this->len()); }
+	T len() { return sqrt(x * x + y * y + z * z); }
+	Vec3<T> norm() { float l = q_isqrt(x * x + y * y + z * z); return { x * l, y * l, z * l }; }
 };
 
 template<typename T1, typename T2>
@@ -76,8 +78,8 @@ struct Vec2 {
 	Vec2(T a, T b) { x = a; y = b; }
 	Vec2(T a) { x = a; y = a; }
 	Vec2() { x = 0; y = 0; }
-	float len() { return sqrtf(x * x + y * y); }
-	Vec2 norm() { return Vec2(x / this->len(), y / this->len()); }
+	T len() { return sqrt(x * x + y * y); }
+	Vec3<T> norm() { float l = q_isqrt(x * x + y * y); return { x * l, y * l }; }
 };
 
 template<typename T1, typename T2>
@@ -142,7 +144,7 @@ float dist(const Vec3<T>& a, const Vec3<T>& b) {
 
 template<typename T>
 float vecDot(const Vec3<T>& a, const Vec3<T>& b) {
-	return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z);
+	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 template<typename T>
@@ -152,7 +154,7 @@ float dist(const Vec2<T>& a, const Vec2<T>& b) {
 
 template<typename T>
 float vecDot(const Vec2<T>& a, const Vec2<T>& b) {
-	return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+	return a.x * b.x + a.y * b.y;
 }
 
 

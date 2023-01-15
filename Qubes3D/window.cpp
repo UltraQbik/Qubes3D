@@ -3,8 +3,6 @@
 
 #include "window.h"
 
-#include <iostream>
-
 
 Window::Window(Vec2<uint16_t> _win_size, unsigned char _fps_lim)
 	: m_Win(sf::VideoMode(_win_size.x, _win_size.y), "Qubes 3D [super]", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize) {

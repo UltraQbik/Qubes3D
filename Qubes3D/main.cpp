@@ -200,7 +200,7 @@ Vec3<COLOR> calculatePixelAt(const Vec2<float>& coord) {
             brightness = dot;
         }
         else {  // shadow ray hit a block
-            brightness = smoothstep(1 / q_isqrt(shadow_ray.d), g_AMBIENT, 1.f, 0.f, 2.f) * dot;
+            brightness = smoothstep(0.5 / q_isqrt(shadow_ray.d), g_AMBIENT, 1.f, 0.f, 2.f) * dot;
         }
 
         return Vec3<COLOR>((COLOR)(clamp(brightness, g_AMBIENT) * 255.f));

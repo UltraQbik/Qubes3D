@@ -1,24 +1,37 @@
 #pragma once
-#include "configuration.h"
-#include "vector.h"
+#include <vector>
+
+#include "Config.h"
+#include "Vector.h"
 
 
-class Chunk {
+struct Chunk
+{
 public:
-    Chunk(BLOCK_ID _fill);
+	Chunk();
 
-    BLOCK_ID* GetAllBlocks() { return m_BlockArray; }
+	BID getBlock(Vec3<POS>& _pos);
+	BID getBlock(POS _x, POS _y, POS _z);
 
-    BLOCK_ID GetBlockAt(Vec3<uint16_t> _pos);
-    BLOCK_ID GetBlockAt(uint16_t _x, uint16_t _y, uint16_t _z);
-
-    void SetBlockAt(Vec3<uint16_t> _pos, BLOCK_ID _id);
-    void SetBlockAt(uint16_t _x, uint16_t _y, uint16_t _z, BLOCK_ID _id);
+	void setBlock(Vec3<POS>& _pos, BID _id);
+	void setBlock(POS _x, POS _y, POS _z, BID _id);
 private:
-    BLOCK_ID* m_BlockArray;
+	std::vector<BID> m_BlockArray;
 };
 
+struct World
+{
+public:
+	World();
 
-void generateEmptyChunk(Chunk& _chunk);
-void generateDebugChunk(Chunk& _chunk);
-void generateFlatChunk(Chunk& _chunk);
+	Chunk& getChunk(Vec3<POS>& _pos);
+	Chunk& getChunk(POS _x, POS _y, POS _z);
+
+	BID getBlock(Vec3<POS>& _pos);
+	BID getBlock(POS _x, POS _y, POS _z);
+
+	void setBlock(Vec3<POS>& _pos, BID _id);
+	void setBlock(POS _x, POS _y, POS _z, BID _id);
+private:
+	std::vector<Chunk> m_ChunkArray;
+};

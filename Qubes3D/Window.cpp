@@ -34,6 +34,6 @@ void Window::onUpdate()
 	m_Window.draw(m_BufferSprite);					// blit the sprite on screen
 	m_Window.display();								// display everything
 
-	m_FrameDelta = (std::chrono::high_resolution_clock::now() - m_Timer).count() / 1e9f;
+	m_FrameDelta = (std::chrono::high_resolution_clock::now() - m_Timer).count() * 1e-9f;
 	m_Timer = std::chrono::high_resolution_clock::now();
 }

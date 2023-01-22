@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-
 #include "Config.h"
 #include "Vector.h"
 

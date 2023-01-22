@@ -9,6 +9,7 @@ class Window
 {
 public:
 	Window(uint16_t _width, uint16_t _height, uint8_t _fps_cap);
+	~Window();
 
 	void onUpdate();
 

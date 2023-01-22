@@ -22,6 +22,11 @@ Window::Window(uint16_t _width, uint16_t _height, uint8_t _fps_cap)
 	m_Window.setMouseCursorVisible(false);
 }
 
+Window::~Window()
+{
+	delete[] m_ScreenBuffer;
+}
+
 
 void Window::onUpdate()
 {

@@ -1,4 +1,12 @@
-#include "Main.h"
+#include <SFML/Graphics.hpp>
+
+#include <stdio.h>
+#include "Config.h"
+#include "Window.h"
+#include "Render.h"
+#include "Vector.h"
+#include "World.h"
+#include "Objects.h"
 
 
 extern Window g_Window(1280, 720, 75);

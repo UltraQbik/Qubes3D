@@ -9,12 +9,15 @@
 #include "Objects.h"
 
 
-extern Window g_Window(1280, 720, 75);
-extern World g_World;
+Window g_Window(1280, 720, 75);
+World g_World;
 
 
 int main()
 {
+	// generate world with some cubes in it
+	generateDebugWorld(g_World);
+
 	while (g_Window.getWindow().isOpen())
 	{
 		// keyboard interation

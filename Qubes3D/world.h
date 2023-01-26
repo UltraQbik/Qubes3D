@@ -9,6 +9,8 @@ struct Chunk
 public:
 	Chunk();
 
+	std::vector<BID> getBlockArray() { return m_BlockArray; }
+
 	BID getBlock(Vec3<POS>& _pos);
 	BID getBlock(POS _x, POS _y, POS _z);
 
@@ -23,6 +25,8 @@ struct World
 public:
 	World();
 
+	std::vector<Chunk> getChunkArray() { return m_ChunkArray; }
+
 	Chunk& getChunk(Vec3<POS>& _pos);
 	Chunk& getChunk(POS _x, POS _y, POS _z);
 
@@ -34,3 +38,6 @@ public:
 private:
 	std::vector<Chunk> m_ChunkArray;
 };
+
+
+void generateDebugWorld(World& _world);

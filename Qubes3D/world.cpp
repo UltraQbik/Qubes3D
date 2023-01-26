@@ -68,3 +68,16 @@ void World::setBlock(POS _x, POS _y, POS _z, BID _id)
 	chunk.setBlock(_x, _y, _z, _id);
 }
 
+
+
+void generateDebugWorld(World& _world)
+{
+	auto chunks = _world.getChunkArray();
+	for (uint64_t i = 0; i < chunks.size(); i++)
+	{
+		auto blocks = chunks[i].getBlockArray();
+		for (uint64_t j = 0; j < blocks.size(); j++)
+			if (j % 8 + 8 * g_CHUNK_SIZE + 8 * g_CHUNK_SIZE * g_CHUNK_SIZE == 0)
+				blocks[j] = 1;
+	}
+}

@@ -2,8 +2,9 @@
 #include <stdint.h>
 
 
-typedef signed char BID;
-typedef int         POS;
+typedef unsigned char COL;
+typedef signed char   BID;
+typedef int           POS;
 
 constexpr int g_CHUNK_SIZE = 16;
 constexpr int g_CHUNK_RSH  = 4;

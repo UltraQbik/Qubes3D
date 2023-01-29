@@ -6,11 +6,12 @@
 #include "Render.h"
 #include "Vector.h"
 #include "World.h"
-#include "Objects.h"
+#include "Camera.h"
 
 
 Window g_Window(1280, 720, 75);
 World g_World;
+Camera g_Camera(Vec3<float>(4));
 
 
 int main()
@@ -24,10 +25,11 @@ int main()
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 			return 0;
 
-		// TODO: camera
+		// call camera update
+		g_Camera.onUpdate(g_Window.getDelta());
 
 		// TODO: multithreading (a good one hopefully)
-		debugScreenTest();
+		render();
 
 		// update the window
 		g_Window.onUpdate();

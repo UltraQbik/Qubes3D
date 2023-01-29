@@ -41,3 +41,6 @@ private:
 
 
 void generateDebugWorld(World& _world);
+
+
+extern World g_World;

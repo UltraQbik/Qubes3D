@@ -32,3 +32,5 @@ private:
 	sf::Uint8* m_ScreenBuffer;
 };
 
+
+extern Window g_Window;

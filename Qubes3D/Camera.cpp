@@ -1,6 +1,25 @@
 #include "Camera.h"
 
 
+Camera::Camera()
+{
+	m_Pos = Vec3<float>(0);
+	m_Dir = Vec3<float>(0, 1, 0);
+}
+
+Camera::Camera(Vec3<float> _pos)
+{
+	m_Pos = _pos;
+	m_Dir = Vec3<float>(0, 1, 0);
+}
+
+Camera::Camera(Vec3<float> _pos, Vec3<float> _dir)
+{
+	m_Pos = _pos;
+	m_Dir = _dir.norm();
+}
+
+
 void Camera::onUpdate(float fd)
 {
 	// mouse controls
@@ -11,7 +30,7 @@ void Camera::onUpdate(float fd)
 
 	sf::Mouse::setPosition(sf::Vector2i(g_Window.getWidth() / 2, g_Window.getHeight() / 2), g_Window.getWindow());
 
-	m_Dir.x = std::fmodf(m_Dir.x - mouse_y * g_CAM_SENSITIVITY * fd, 6.2831853f);
+	m_Dir.x = std::fmodf(m_Dir.x + mouse_y * g_CAM_SENSITIVITY * fd, 6.2831853f);
 	m_Dir.z = std::fmodf(m_Dir.z - mouse_x * g_CAM_SENSITIVITY * fd, 6.2831853f);
 
 	// keyboard controls

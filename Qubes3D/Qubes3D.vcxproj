@@ -144,7 +144,6 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Config.h" />
-    <ClInclude Include="Objects.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="Window.h" />

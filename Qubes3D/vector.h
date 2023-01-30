@@ -33,18 +33,6 @@ template<typename T1, typename T2>
 Vec3<T1> operator/(const Vec3<T1>& lhs, const Vec3<T2> rhs) { return { lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z }; }
 
 template<typename T1, typename T2>
-Vec3<T1> operator+=(const Vec3<T1>& lhs, const Vec3<T2>& rhs) { return { lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z }; }
-
-template<typename T1, typename T2>
-Vec3<T1> operator-=(const Vec3<T1>& lhs, const Vec3<T2>& rhs) { return { lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z }; }
-
-template<typename T1, typename T2>
-Vec3<T1> operator*=(const Vec3<T1>& lhs, const Vec3<T2>& rhs) { return { lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z }; }
-
-template<typename T1, typename T2>
-Vec3<T1> operator/=(const Vec3<T1>& lhs, const Vec3<T2> rhs) { return { lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z }; }
-
-template<typename T1, typename T2>
 Vec3<T1> operator+(const Vec3<T1>& lhs, T2 rhs) { return { lhs.x + rhs, lhs.y + rhs, lhs.z + rhs }; }
 
 template<typename T1, typename T2>
@@ -106,18 +94,6 @@ template<typename T1, typename T2>
 Vec2<T1> operator/(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x / rhs.x, lhs.y / rhs.y }; }
 
 template<typename T1, typename T2>
-Vec2<T1> operator+=(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x + rhs.x, lhs.y + rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator-=(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x - rhs.x, lhs.y - rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator*=(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x * rhs.x, lhs.y * rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator/=(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x / rhs.x, lhs.y / rhs.y }; }
-
-template<typename T1, typename T2>
 Vec2<T1> operator+(const Vec2<T1>& lhs, T2 rhs) { return { lhs.x + rhs, lhs.y + rhs }; }
 
 template<typename T1, typename T2>
@@ -163,4 +139,19 @@ inline Vec3<float> rotateZ(const Vec3<float>& point, float angle) {
 
 inline Vec3<float> rotateXYZ(const Vec3<float>& point, const Vec3<float>& angle) {
 	return rotateZ(rotateY(rotateX(point, angle.x), angle.y), angle.z);
+}
+
+
+// definetely will be moved somewhere else
+template<typename T>
+inline T clamp(T val, T _min, T _max)
+{
+	T v = val > _min ? val : _min;
+	return v < _max ? v : _max;
+}
+
+inline float smoothstep(float val, float _min = 0.f, float _max = 1.f, float _t1 = 0.f, float _t2 = 1.f)
+{
+	float k = clamp((val - _t1) / (_t2 - _t1), _min, _max);
+	return k * k * (3 - 2 * k);
 }

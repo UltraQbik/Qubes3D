@@ -15,7 +15,7 @@ Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
     }
     else {
         step.x = -1;
-        len.x = (pos.x - rp.x) * unit.x;
+        len.x = dir.x == 0 ? INFINITY : (pos.x - rp.x) * unit.x;
     }
     if (dir.y > 0) {
         step.y = 1;
@@ -23,7 +23,7 @@ Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
     }
     else {
         step.y = -1;
-        len.y = (pos.y - rp.y) * unit.y;
+        len.y = dir.y == 0 ? INFINITY : (pos.y - rp.y) * unit.y;
     }
     if (dir.z > 0) {
         step.z = 1;
@@ -31,44 +31,65 @@ Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
     }
     else {
         step.z = -1;
-        len.z = (pos.z - rp.z) * unit.z;
+        len.z = dir.z == 0 ? INFINITY : (pos.z - rp.z) * unit.z;
     }
 
-    if (rp.x < 0 || rp.x >= g_CHUNK_SIZE || rp.y < 0 || rp.y >= g_CHUNK_SIZE || rp.z < 0 || rp.z >= g_CHUNK_SIZE)
+    if (rp.x < 0 || rp.x >= g_CHUNK_SIZE * g_MAP_SIZE || rp.y < 0 || rp.y >= g_CHUNK_SIZE * g_MAP_SIZE || rp.z < 0 || rp.z >= g_CHUNK_SIZE * g_MAP_SIZE)
         return Ray(rp, pos, 0, 0.f);
 
-    // quick NAN fix when multiplying by float inf
-    if (dir.x == 0) len.x = INFINITY;
-    if (dir.y == 0) len.y = INFINITY;
-    if (dir.z == 0) len.z = INFINITY;
-
     BID blk;
-    while (true) {
-        blk = g_World.getBlock(rp);
+    while (true)
+    {
+        // fetch current chunk
+        Chunk& chunk = g_World.getChunk(rp);
+        while (true) {
+            // get the block from the current chunk
+            blk = chunk.getBlock(rp.x % g_CHUNK_SIZE, rp.y % g_CHUNK_SIZE, rp.z % g_CHUNK_SIZE);
 
-        if (blk != 0)
-            return Ray(rp, d * dir + pos, blk, d);
+            // check if the ray hit the block
+            if (blk != 0)
+                return Ray(rp, d * dir + pos, blk, d);
 
-        if (len.x < len.y && len.x < len.z) {
-            rp.x += (int)step.x;
-            d = len.x;
-            len.x += unit.x;
-            if (rp.x < 0 || rp.x >= g_CHUNK_SIZE)
-                return Ray(rp, d * dir + pos, blk, d);
-        }
-        else if (len.y < len.z) {
-            rp.y += (int)step.y;
-            d = len.y;
-            len.y += unit.y;
-            if (rp.y < 0 || rp.y >= g_CHUNK_SIZE)
-                return Ray(rp, d * dir + pos, blk, d);
-        }
-        else {
-            rp.z += (int)step.z;
-            d = len.z;
-            len.z += unit.z;
-            if (rp.z < 0 || rp.z >= g_CHUNK_SIZE)
-                return Ray(rp, d * dir + pos, blk, d);
+            // move the ray
+            if (len.x < len.y && len.x < len.z) {
+                rp.x += step.x;
+                d = len.x;
+                len.x += unit.x;
+
+                // check if the ray is outside the world
+                if (rp.x < 0 || rp.x >= g_CHUNK_SIZE * g_MAP_SIZE)
+                    return Ray(rp, d * dir + pos, blk, d);
+
+                // check if the ray is outside the chunk
+                if (rp.x >= g_CHUNK_SIZE)
+                    break;
+            }
+            else if (len.y < len.z) {
+                rp.y += step.y;
+                d = len.y;
+                len.y += unit.y;
+
+                // check if the ray is outside the world
+                if (rp.y < 0 || rp.y >= g_CHUNK_SIZE * g_MAP_SIZE)
+                    return Ray(rp, d * dir + pos, blk, d);
+
+                // check if the ray is outside the chunk
+                if (rp.y >= g_CHUNK_SIZE)
+                    break;
+            }
+            else {
+                rp.z += step.z;
+                d = len.z;
+                len.z += unit.z;
+
+                // check if the ray is outside the world
+                if (rp.z < 0 || rp.z >= g_CHUNK_SIZE * g_MAP_SIZE)
+                    return Ray(rp, d * dir + pos, blk, d);
+
+                // check if the ray is outside the chunk
+                if (rp.z >= g_CHUNK_SIZE)
+                    break;
+            }
         }
     }
 }
@@ -82,12 +103,14 @@ Vec3<float> calculatePixel(float u, float v)
 
 	Ray sample_ray = castRay(g_Camera.m_Pos, dir);
 
-    return Vec3<float>(smoothstep(4.f / sample_ray.d, 0.f, 0.9f));
-
-	/*if (sample_ray.cid != 0)
-		return Vec3<float>(8.f - smoothstep(sample_ray.d, 0.f, 8.f));
-	else
-		return Vec3<float>(0.88f);*/
+	if (sample_ray.cid == 0)
+    {
+        return Vec3<float>(0.f);
+    }
+    else
+    {
+        return Vec3<float>(1.f - smoothstep(sample_ray.d / 16.f));
+    }
 }
 
 

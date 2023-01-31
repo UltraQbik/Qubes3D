@@ -1,22 +1,24 @@
 #include "Camera.h"
+#include "Window.h"
+#include "AMath.h"
 
 
 Camera::Camera()
 {
-	m_Pos = Vec3<float>(0);
-	m_Dir = Vec3<float>(0, 1, 0);
+	m_Pos = FVec3(0);
+	m_Dir = FVec3(0, 1, 0);
 }
 
-Camera::Camera(Vec3<float> _pos)
+Camera::Camera(FVec3 _pos)
 {
 	m_Pos = _pos;
-	m_Dir = Vec3<float>(0, 1, 0);
+	m_Dir = FVec3(0, 1, 0);
 }
 
-Camera::Camera(Vec3<float> _pos, Vec3<float> _dir)
+Camera::Camera(FVec3 _pos, FVec3 _dir)
 {
 	m_Pos = _pos;
-	m_Dir = _dir.norm();
+	m_Dir = _dir.normalize();
 }
 
 

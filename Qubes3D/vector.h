@@ -1,5 +1,74 @@
 #pragma once
+#include <iostream>
+#include <smmintrin.h>
 #include <cmath>
+
+
+
+// Fast vector XYZ (Vector 3)
+struct FVec3
+{
+    inline FVec3() : mmvalue(_mm_setzero_ps()) {}
+    inline FVec3(float x, float y, float z) : mmvalue(_mm_set_ps(0, z, y, x)) {}
+    inline FVec3(float x, float y) : mmvalue(_mm_set_ps(0, 0, y, x)) {}
+    inline FVec3(float x) : mmvalue(_mm_set_ps(0, x, x, x)) {}
+    inline FVec3(__m128 m) : mmvalue(m) {}
+
+    /// Arithmetic operators with FVec3
+    inline FVec3 operator+(const FVec3& b) const { return _mm_add_ps(mmvalue, b.mmvalue); }
+    inline FVec3 operator-(const FVec3& b) const { return _mm_sub_ps(mmvalue, b.mmvalue); }
+    inline FVec3 operator*(const FVec3& b) const { return _mm_mul_ps(mmvalue, b.mmvalue); }
+    inline FVec3 operator/(const FVec3& b) const { return _mm_div_ps(mmvalue, b.mmvalue); }
+
+    /// Assignation and arithmetic operators with FVec3
+    inline FVec3& operator+=(const FVec3& b) { mmvalue = _mm_add_ps(mmvalue, b.mmvalue); return *this; }
+    inline FVec3& operator-=(const FVec3& b) { mmvalue = _mm_sub_ps(mmvalue, b.mmvalue); return *this; }
+    inline FVec3& operator*=(const FVec3& b) { mmvalue = _mm_mul_ps(mmvalue, b.mmvalue); return *this; }
+    inline FVec3& operator/=(const FVec3& b) { mmvalue = _mm_div_ps(mmvalue, b.mmvalue); return *this; }
+
+    /// Arithmetic operators with floats
+    inline FVec3 operator+(float b) const { return _mm_add_ps(mmvalue, _mm_set1_ps(b)); }
+    inline FVec3 operator-(float b) const { return _mm_sub_ps(mmvalue, _mm_set1_ps(b)); }
+    inline FVec3 operator*(float b) const { return _mm_mul_ps(mmvalue, _mm_set1_ps(b)); }
+    inline FVec3 operator/(float b) const { return _mm_div_ps(mmvalue, _mm_set1_ps(b)); }
+
+    /// Assignation and arithmetic operators with float
+    inline FVec3& operator+=(float b) { mmvalue = _mm_add_ps(mmvalue, _mm_set1_ps(b)); return *this; }
+    inline FVec3& operator-=(float b) { mmvalue = _mm_sub_ps(mmvalue, _mm_set1_ps(b)); return *this; }
+    inline FVec3& operator*=(float b) { mmvalue = _mm_mul_ps(mmvalue, _mm_set1_ps(b)); return *this; }
+    inline FVec3& operator/=(float b) { mmvalue = _mm_div_ps(mmvalue, _mm_set1_ps(b)); return *this; }
+
+    /// Dot product
+    inline float dot(const FVec3& b) const { return _mm_cvtss_f32(_mm_dp_ps(mmvalue, b.mmvalue, 0x71)); }
+    /// Length of the vector
+    inline float length() const { return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(mmvalue, mmvalue, 0x71))); }
+    /// Returns the normalized vector
+    inline FVec3 normalize() const {
+        // multiplying by rsqrt does not yield an accurate enough result, so we
+        // divide by sqrt instead.
+        return _mm_div_ps(mmvalue, _mm_sqrt_ps(_mm_dp_ps(mmvalue, mmvalue, 0xFF)));
+    }
+
+    /// Textual representation
+    friend std::ostream& operator<<(std::ostream& os, const FVec3& v)
+    {
+        os << "Vec3(" << v.x << ", "
+            << v.y << ", "
+            << v.z << ")";
+        return os;
+    }
+
+    union
+    {
+        struct { float x, y, z; };
+        __m128 mmvalue;
+    };
+};
+
+inline FVec3 operator+(float a, const FVec3& b) { return b + a; }
+inline FVec3 operator-(float a, const FVec3& b) { return FVec3(_mm_set1_ps(a)) - b; }
+inline FVec3 operator*(float a, const FVec3& b) { return b * a; }
+inline FVec3 operator/(float a, const FVec3& b) { return FVec3(_mm_set1_ps(a)) / b; }
 
 
 // Vector XYZ (vector 3)
@@ -7,151 +76,73 @@ template<typename T>
 struct Vec3 {
 	T x, y, z;
 
-	Vec3() { x = 0; y = 0; z = 0; }
-	Vec3(T _x) { x = _x; y = _x; z = _x; }
-	Vec3(T _x, T _y) { x = _x; y = _y; z = 0; }
-	Vec3(T _x, T _y, T _z) { x = _x; y = _y; z = _z; }
+	inline Vec3() { x = 0; y = 0; z = 0; }
+	inline Vec3(T _x) { x = _x; y = _x; z = _x; }
+	inline Vec3(T _x, T _y) { x = _x; y = _y; z = 0; }
+	inline Vec3(T _x, T _y, T _z) { x = _x; y = _y; z = _z; }
 
 	float length() { return sqrtf(x * x + y * y + z * z); }
 	Vec3<T> norm() { float iL = 1 / sqrtf(x * x + y * y + z * z); return { (T)(x * iL), (T)(y * iL), (T)(z * iL) }; }
 	void normalize() { float iL = 1 / sqrtf(x * x + y * y + z * z); x *= iL; y *= iL; z *= iL; }
 };
 
+// -Vec3
 template<typename T1>
-Vec3<T1> operator-(const Vec3<T1>& lhs) { return { -lhs.x, -lhs.y, -lhs.z }; }
+inline Vec3<T1> operator-(const Vec3<T1>& a) { return { -a.x, -a.y, -a.z }; }
 
+// Arithmetic operators with Vec3
 template<typename T1, typename T2>
-Vec3<T1> operator+(const Vec3<T1>& lhs, const Vec3<T2>& rhs) { return { lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z }; }
-
+inline Vec3<T1> operator+(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
 template<typename T1, typename T2>
-Vec3<T1> operator-(const Vec3<T1>& lhs, const Vec3<T2>& rhs) { return { lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z }; }
-
+inline Vec3<T1> operator-(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 template<typename T1, typename T2>
-Vec3<T1> operator*(const Vec3<T1>& lhs, const Vec3<T2>& rhs) { return { lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z }; }
-
+inline Vec3<T1> operator*(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x * b.x, a.y * b.y, a.z * b.z }; }
 template<typename T1, typename T2>
-Vec3<T1> operator/(const Vec3<T1>& lhs, const Vec3<T2> rhs) { return { lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z }; }
+inline Vec3<T1> operator/(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x / b.x, a.y / b.y, a.z / b.z }; }
 
+// Assignation and arithmetic operators with Vec3
 template<typename T1, typename T2>
-Vec3<T1> operator+(const Vec3<T1>& lhs, T2 rhs) { return { lhs.x + rhs, lhs.y + rhs, lhs.z + rhs }; }
-
+inline Vec3<T1>& operator+=(const Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return *this; }
 template<typename T1, typename T2>
-Vec3<T1> operator-(const Vec3<T1>& lhs, T2 rhs) { return { lhs.x - rhs, lhs.y - rhs, lhs.z - rhs }; }
-
+inline Vec3<T1>& operator-=(const Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return *this; }
 template<typename T1, typename T2>
-Vec3<T1> operator*(const Vec3<T1>& lhs, T2 rhs) { return { lhs.x * rhs, lhs.y * rhs, lhs.z * rhs }; }
-
+inline Vec3<T1>& operator*=(const Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return *this; }
 template<typename T1, typename T2>
-Vec3<T1> operator/(const Vec3<T1>& lhs, T2 rhs) { return { lhs.x / rhs, lhs.y / rhs, lhs.z / rhs }; }
+inline Vec3<T1>& operator/=(const Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return *this; }
 
+// Arithmetic operators with T2
 template<typename T1, typename T2>
-Vec3<T1> operator+(T2 lhs, const Vec3<T1>& rhs) { return { lhs + rhs.x, lhs + rhs.y, lhs + rhs.z }; }
-
+inline Vec3<T1> operator+(const Vec3<T1>& a, T2 b) { return { a.x + b, a.y + b, a.z + b }; }
 template<typename T1, typename T2>
-Vec3<T1> operator-(T2 lhs, const Vec3<T1>& rhs) { return { lhs - rhs.x, lhs - rhs.y, lhs - rhs.z }; }
-
+inline Vec3<T1> operator-(const Vec3<T1>& a, T2 b) { return { a.x - b, a.y - b, a.z - b }; }
 template<typename T1, typename T2>
-Vec3<T1> operator*(T2 lhs, const Vec3<T1>& rhs) { return { lhs * rhs.x, lhs * rhs.y, lhs * rhs.z }; }
-
+inline Vec3<T1> operator*(const Vec3<T1>& a, T2 b) { return { a.x * b, a.y * b, a.z * b }; }
 template<typename T1, typename T2>
-Vec3<T1> operator/(T2 lhs, const Vec3<T1>& rhs) { return { lhs / rhs.x, lhs / rhs.y, lhs / rhs.z }; }
+inline Vec3<T1> operator/(const Vec3<T1>& a, T2 b) { return { a.x / b, a.y / b, a.z / b }; }
 
-
+// reverse of that
 template<typename T1, typename T2>
-float dotProduct(const Vec3<T1>& lhs, const Vec3<T2>& rhs)
+inline Vec3<T1> operator+(T2 a, const Vec3<T1>& b) { return b + a; }
+template<typename T1, typename T2>
+inline Vec3<T1> operator-(T2 a, const Vec3<T1>& b) { return Vec3(a) - b; }
+template<typename T1, typename T2>
+inline Vec3<T1> operator*(T2 a, const Vec3<T1>& b) { return b * a; }
+template<typename T1, typename T2>
+inline Vec3<T1> operator/(T2 a, const Vec3<T1>& b) { return Vec3(a) / b; }
+
+// Assignation and arithmetic operators with T2
+template<typename T1, typename T2>
+inline Vec3<T1>& operator+=(const Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return *this; }
+template<typename T1, typename T2>
+inline Vec3<T1>& operator-=(const Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return *this; }
+template<typename T1, typename T2>
+inline Vec3<T1>& operator*=(const Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return *this; }
+template<typename T1, typename T2>
+inline Vec3<T1>& operator/=(const Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return *this; }
+
+// Dot product
+template<typename T1, typename T2>
+inline float dotProduct(const Vec3<T1>& a, const Vec3<T2>& b)
 {
-	return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
-}
-
-
-// Vector XY (vector 2)
-template<typename T>
-struct Vec2 {
-	T x, y;
-
-	Vec2() { x = 0; y = 0; }
-	Vec2(T _x) { x = _x; y = _x; }
-	Vec2(T _x, T _y) { x = _x; y = _y; }
-
-	float length() { return sqrtf(x * x + y * y); }
-	Vec3<T> norm() { float iL = 1 / sqrtf(x * x + y * y); return { (T)(x * iL), (T)(y * iL) }; }
-	void normalize() { float iL = 1 / sqrtf(x * x + y * y); x *= iL; y *= iL; }
-};
-
-template<typename T1>
-Vec2<T1> operator-(const Vec2<T1>& lhs) { return { -lhs.x, -lhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator+(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x + rhs.x, lhs.y + rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator-(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x - rhs.x, lhs.y - rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator*(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x * rhs.x, lhs.y * rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator/(const Vec2<T1>& lhs, const Vec2<T2>& rhs) { return { lhs.x / rhs.x, lhs.y / rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator+(const Vec2<T1>& lhs, T2 rhs) { return { lhs.x + rhs, lhs.y + rhs }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator-(const Vec2<T1>& lhs, T2 rhs) { return { lhs.x - rhs, lhs.y - rhs }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator*(const Vec2<T1>& lhs, T2 rhs) { return { lhs.x * rhs, lhs.y * rhs }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator/(const Vec2<T1>& lhs, T2 rhs) { return { lhs.x / rhs, lhs.y / rhs }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator+(T2 lhs, const Vec2<T1>& rhs) { return { lhs + rhs.x, lhs + rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator-(T2 lhs, const Vec2<T1>& rhs) { return { lhs - rhs.x, lhs - rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator*(T2 lhs, const Vec2<T1>& rhs) { return { lhs * rhs.x, lhs * rhs.y }; }
-
-template<typename T1, typename T2>
-Vec2<T1> operator/(T2 lhs, const Vec2<T1>& rhs) { return { lhs / rhs.x, lhs / rhs.y }; }
-
-template<typename T1, typename T2>
-float dotProduct(const Vec2<T1>& lhs, const Vec2<T2>& rhs)
-{
-	return lhs.x * rhs.x + lhs.y * rhs.y;
-}
-
-
-// probably will be moved in the future
-inline Vec3<float> rotateX(const Vec3<float>& point, float angle) {
-	return Vec3<float>(point.x, point.y * std::cosf(angle) - point.z * std::sinf(angle), point.z * std::cosf(angle) + point.y * std::sinf(angle));
-}
-
-inline Vec3<float> rotateY(const Vec3<float>& point, float angle) {
-	return Vec3<float>(point.x * std::cosf(angle) - point.z * std::sinf(angle), point.y, point.z * std::cosf(angle) + point.x * std::sinf(angle));
-}
-
-inline Vec3<float> rotateZ(const Vec3<float>& point, float angle) {
-	return Vec3<float>(point.x * std::cosf(angle) - point.y * std::sinf(angle), point.y * std::cosf(angle) + point.x * std::sinf(angle), point.z);
-}
-
-inline Vec3<float> rotateXYZ(const Vec3<float>& point, const Vec3<float>& angle) {
-	return rotateZ(rotateY(rotateX(point, angle.x), angle.y), angle.z);
-}
-
-
-// definetely will be moved somewhere else
-template<typename T>
-inline T clamp(T val, T _min, T _max)
-{
-	T v = val > _min ? val : _min;
-	return v < _max ? v : _max;
-}
-
-inline float smoothstep(float val, float _min = 0.f, float _max = 1.f, float _t1 = 0.f, float _t2 = 1.f)
-{
-	float k = clamp((val - _t1) / (_t2 - _t1), _min, _max);
-	return k * k * (3 - 2 * k);
+	return a.x * b.x + a.y * b.y + a.z * b.z;
 }

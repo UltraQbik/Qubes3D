@@ -1,13 +1,17 @@
 #include "Render.h"
+#include "Camera.h"
+#include "Window.h"
+#include "World.h"
+#include "AMath.h"
 
 
-Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
+Ray castRay(const FVec3& pos, const FVec3& dir)
 {
     float d = 0.0f;
-    Vec3<POS> rp((POS)pos.x, (POS)pos.y, (POS)pos.z);
-    Vec3<float> unit(fabsf(1 / dir.x), fabsf(1 / dir.y), fabsf(1 / dir.z));
-    Vec3<POS> step;
-    Vec3<float> len;
+    FVec3 rp((POS)pos.x, (POS)pos.y, (POS)pos.z);
+    FVec3 unit(fabsf(1 / dir.x), fabsf(1 / dir.y), fabsf(1 / dir.z));
+    FVec3 step;
+    FVec3 len;
 
     if (dir.x > 0) {
         step.x = 1;
@@ -41,10 +45,10 @@ Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
     while (true)
     {
         // fetch current chunk
-        Chunk& chunk = g_World.getChunk(rp);
+        Chunk& chunk = g_World.getChunk((POS)rp.x, (POS)rp.y, (POS)rp.z);
         while (true) {
             // get the block from the current chunk
-            blk = chunk.getBlock(rp.x % g_CHUNK_SIZE, rp.y % g_CHUNK_SIZE, rp.z % g_CHUNK_SIZE);
+            blk = chunk.getBlock((POS)rp.x % g_CHUNK_SIZE, (POS)rp.y % g_CHUNK_SIZE, (POS)rp.z % g_CHUNK_SIZE);
 
             // check if the ray hit the block
             if (blk != 0)
@@ -91,13 +95,16 @@ Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
                     break;
             }
         }
+        // check if we exceeded the max render distance
+        if (d > g_CAM_RENDER_DISTANCE)
+            return Ray(rp, d * dir + pos, blk, d);
     }
 }
 
 
 Vec3<float> calculatePixel(float u, float v)
 {
-	Vec3<float> dir(u, 1, v);
+	FVec3 dir(u, 1, v);
 	dir.normalize();
 	dir = rotateZ(rotateX(dir, g_Camera.m_Dir.x), g_Camera.m_Dir.z);
 

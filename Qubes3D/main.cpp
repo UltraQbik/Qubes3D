@@ -11,7 +11,7 @@
 
 Window g_Window(480, 360, 75);
 World g_World;
-Camera g_Camera(Vec3<float>(10.392f));
+Camera g_Camera(FVec3(10.392f));
 
 
 int main()
@@ -27,6 +27,7 @@ int main()
 
 		// TODO: multithreading (a good one hopefully)
 		render();
+		std::cout << 1.f / g_Window.getDelta() << "\n";
 
 		// update the window
 		g_Window.onUpdate();

@@ -9,7 +9,7 @@
 #include "Camera.h"
 
 
-Window g_Window(480, 360, 75);
+Window g_Window(1280, 720, 75);
 World g_World;
 Camera g_Camera(FVec3(10.392f));
 
@@ -27,7 +27,6 @@ int main()
 
 		// TODO: multithreading (a good one hopefully)
 		render();
-		std::cout << 1.f / g_Window.getDelta() << "\n";
 
 		// update the window
 		g_Window.onUpdate();

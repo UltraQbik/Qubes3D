@@ -52,6 +52,11 @@ inline T clamp(T val, T _min = 0.f, T _max = 1.f)
 	return v < _max ? v : _max;
 }
 
+inline FVec3 clamp(FVec3 val, float _min = 0.f, float _max = 1.f)
+{  // Clamps the values between _min and _max
+	return _mm_min_ps(_mm_max_ps(val.mmvalue, _mm_set_ps1(_min)), _mm_set_ps1(_max));
+}
+
 inline float smoothstep(float val, float _min = 0.f, float _max = 1.f, float _t1 = 0.f, float _t2 = 1.f)
 {  // Smoothstep function
 	float k = clamp((val - _t1) / (_t2 - _t1), _min, _max);

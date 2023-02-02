@@ -1,6 +1,8 @@
 #include "Camera.h"
 #include "Window.h"
+#include "World.h"
 #include "AMath.h"
+#include "Render.h"
 
 
 Camera::Camera()
@@ -35,10 +37,6 @@ void Camera::onUpdate(float fd)
 	m_Dir.x = std::fmodf(m_Dir.x - mouse_y * g_CAM_SENSITIVITY * fd, 6.2831853f);
 	m_Dir.x = clamp(m_Dir.x, -1.5f, 1.5f);
 	m_Dir.z = std::fmodf(m_Dir.z - mouse_x * g_CAM_SENSITIVITY * fd, 6.2831853f);
-
-	// keyboard controls
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-		exit(0);
 
 	// keyboard movement
 	float movement_speed = g_CAM_SPEED * fd;

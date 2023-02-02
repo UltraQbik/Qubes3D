@@ -14,4 +14,6 @@ struct Ray
 	float d;			// distance
 };
 
+inline Ray castRay(const FVec3& pos, const FVec3& dir);
+
 void render();

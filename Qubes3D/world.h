@@ -11,10 +11,10 @@ public:
 
 	std::vector<BID> getBlockArray() { return m_BlockArray; }
 
-	BID getBlock(Vec3<POS>& _pos);
+	BID getBlock(const Vec3<POS>& _pos);
 	BID getBlock(POS _x, POS _y, POS _z);
 
-	void setBlock(Vec3<POS>& _pos, BID _id);
+	void setBlock(const Vec3<POS>& _pos, BID _id);
 	void setBlock(POS _x, POS _y, POS _z, BID _id);
 private:
 	std::vector<BID> m_BlockArray;
@@ -27,13 +27,13 @@ public:
 
 	std::vector<Chunk> getChunkArray() { return m_ChunkArray; }
 
-	Chunk& getChunk(Vec3<POS>& _pos);
+	Chunk& getChunk(const Vec3<POS>& _pos);
 	Chunk& getChunk(POS _x, POS _y, POS _z);
 
-	BID getBlock(Vec3<POS>& _pos);
+	BID getBlock(const Vec3<POS>& _pos);
 	BID getBlock(POS _x, POS _y, POS _z);
 
-	void setBlock(Vec3<POS>& _pos, BID _id);
+	void setBlock(const Vec3<POS>& _pos, BID _id);
 	void setBlock(POS _x, POS _y, POS _z, BID _id);
 private:
 	std::vector<Chunk> m_ChunkArray;

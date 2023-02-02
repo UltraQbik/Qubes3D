@@ -102,13 +102,13 @@ inline Vec3<T1> operator/(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x /
 
 // Assignation and arithmetic operators with Vec3
 template<typename T1, typename T2>
-inline Vec3<T1>& operator+=(const Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return *this; }
+inline Vec3<T1>& operator+=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
 template<typename T1, typename T2>
-inline Vec3<T1>& operator-=(const Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return *this; }
+inline Vec3<T1>& operator-=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
 template<typename T1, typename T2>
-inline Vec3<T1>& operator*=(const Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return *this; }
+inline Vec3<T1>& operator*=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
 template<typename T1, typename T2>
-inline Vec3<T1>& operator/=(const Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return *this; }
+inline Vec3<T1>& operator/=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
 
 // Arithmetic operators with T2
 template<typename T1, typename T2>

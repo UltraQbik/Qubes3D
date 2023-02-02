@@ -9,7 +9,7 @@
 extern FVec3 g_Sun = FVec3(-2.f, 3.f, -4.f).normalize();
 
 
-Ray castRay(const FVec3& pos, const FVec3& dir)
+inline Ray castRay(const FVec3& pos, const FVec3& dir)
 {
     float d = 0.0f;
     FVec3 rp(truncf(pos.x), truncf(pos.y), truncf(pos.z));
@@ -108,9 +108,7 @@ Ray castRay(const FVec3& pos, const FVec3& dir)
 
 FVec3 calculatePixel(float u, float v)
 {
-	FVec3 dir(u, 1, v);
-	dir = dir.normalize();
-	dir = rotateZ(rotateX(dir, g_Camera.m_Dir.x), g_Camera.m_Dir.z);
+	FVec3 dir = rotateZ(rotateX(FVec3(u, 1, v).normalize(), g_Camera.m_Dir.x), g_Camera.m_Dir.z);
 
 	Ray sample_ray = castRay(g_Camera.m_Pos, dir);
 
@@ -123,13 +121,10 @@ FVec3 calculatePixel(float u, float v)
         FVec3 sky = (FVec3(0.8627f, 0.9411f, 0.9803f) * grad) + (FVec3(0.4509f, 0.5294f, 0.7254f) * (1.f - grad));
 
         // calculate sun disc
-        grad = smoothstep((dir - g_Sun).length() - 1.4f, 0.f, 1.f, 0.5f, 0.8f);
+        grad = clamp((dir - g_Sun).length() - 1.9f, 0.f, 1.f);
 
         // add sun to the sky
         sky += FVec3(grad);
-
-        //// normalize the value of the sky
-        sky = clamp(sky);
 
         return sky;
     }
@@ -153,7 +148,7 @@ void render()
 		{
 			u = ((float)x / width * 2.f - 1.f) * ratio;
 
-			FVec3 color = calculatePixel(u, v) * 255.f;
+            FVec3 color = clamp(calculatePixel(u, v)) * 255.f;
 
 			buffer[y * width * 4 + x * 4] = (unsigned char)color.x;
 			buffer[y * width * 4 + x * 4 + 1] = (unsigned char)color.y;

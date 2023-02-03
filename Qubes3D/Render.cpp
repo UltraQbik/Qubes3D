@@ -56,7 +56,7 @@ inline Ray castRay(const FVec3& pos, const FVec3& dir)
 
             // check if the ray hit the block
             if (blk != 0)
-                return Ray(rp, d * dir + pos, blk, d);
+                return Ray(rp, (d + 1e-5f) * dir + pos, blk, d);
 
             // move the ray
             if (len.x < len.y && len.x < len.z) {
@@ -105,6 +105,20 @@ inline Ray castRay(const FVec3& pos, const FVec3& dir)
     }
 }
 
+FVec3 getNormal(const FVec3& pos)
+{
+    // __m128i chunk_index = _mm_mullo_epi32(_mm_srli_epi32(_mm_cvttps_epi32(pos.mmvalue), g_CHUNK_RSH), _mm_set_epi32(0, g_MAP_SIZE * g_MAP_SIZE, g_MAP_SIZE, 1));
+    // Chunk& chunk = g_World.getChunkArray()[_mm_extract_epi32(chunk_index, 0) + _mm_extract_epi32(chunk_index, 1) + _mm_extract_epi32(chunk_index, 2)];
+    // FVec3 block_pos(std::fmodf(pos.x, g_CHUNK_SIZE), std::fmodf(pos.y, g_CHUNK_SIZE), std::fmodf(pos.z, g_CHUNK_SIZE));
+    FVec3 norm(
+        (float)((g_World.getBlockP((POS)(pos.x - 2.5e-5f), (POS)pos.y, (POS)pos.z) == 0) - (g_World.getBlockP((POS)(pos.x + 2.5e-5f), (POS)pos.y, (POS)pos.z) == 0)),
+        (float)((g_World.getBlockP((POS)pos.x, (POS)(pos.y - 2.5e-5f), (POS)pos.z) == 0) - (g_World.getBlockP((POS)pos.x, (POS)(pos.y + 2.5e-5f), (POS)pos.z) == 0)),
+        (float)((g_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z - 2.5e-5f)) == 0) - (g_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z + 2.5e-5f)) == 0))
+    );
+
+    return norm;
+}
+
 
 FVec3 calculatePixel(float u, float v)
 {
@@ -130,7 +144,7 @@ FVec3 calculatePixel(float u, float v)
     }
     else
     {  // calculate the block
-        return FVec3(1.f - smoothstep(sample_ray.d / 16.f));
+        return getNormal(sample_ray.fpos) / 2.f + 0.5f;
     }
 }
 

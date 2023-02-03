@@ -125,3 +125,11 @@ void generateDebugWorld(World& _world)
 				if (i % 4 == 0 && j % 4 == 0 && k % 4 == 0)
 					_world.setBlock(k, j, i, 1);
 }
+
+void generateFlatWorld(World& _world, const int level)
+{
+	for (POS i = 0; i < level; i++)
+		for (POS j = 0; j < g_CHUNK_SIZE * g_MAP_SIZE; j++)
+			for (POS k = 0; k < g_CHUNK_SIZE * g_MAP_SIZE; k++)
+				_world.setBlock(k, j, i, 1);
+}

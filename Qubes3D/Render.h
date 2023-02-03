@@ -16,4 +16,5 @@ struct Ray
 
 inline Ray castRay(const FVec3& pos, const FVec3& dir);
 
-void render();
+void renderFullCon();
+void renderFull();

@@ -46,6 +46,7 @@ private:
 
 
 void generateDebugWorld(World& _world);
+void generateFlatWorld(World& _world, const int level);
 
 
 extern World g_World;

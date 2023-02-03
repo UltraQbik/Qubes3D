@@ -1,6 +1,6 @@
+#include <iostream>
 #include <SFML/Graphics.hpp>
 
-#include <stdio.h>
 #include "Config.h"
 #include "Window.h"
 #include "Render.h"
@@ -9,7 +9,10 @@
 #include "Camera.h"
 
 
-Window g_Window(480, 360, 75);
+// TODO: clean up main
+
+
+Window g_Window(1280, 720, 75);
 World g_World;
 Camera g_Camera(FVec3(10.392f));
 
@@ -17,7 +20,7 @@ Camera g_Camera(FVec3(10.392f));
 int main()
 {
 	// generate world with some cubes in it
-	generateDebugWorld(g_World);
+	generateFlatWorld(g_World, 8);
 
 	// events
 	sf::Event ev;
@@ -37,14 +40,14 @@ int main()
             }
         }
 
-		// call camera update
+		// Camera update
 		if (g_Window.getWindow().hasFocus())
 			g_Camera.onUpdate(g_Window.getDelta());
 
 		// TODO: multithreading (a good one hopefully)
-		render();
+		renderFullCon();
 
-		// update the window
+		// Update the window
 		g_Window.onUpdate();
 	}
 

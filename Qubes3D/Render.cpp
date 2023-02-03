@@ -1,3 +1,4 @@
+#include <thread>
 #include "Render.h"
 #include "Camera.h"
 #include "Window.h"
@@ -12,8 +13,8 @@ extern FVec3 g_Sun = FVec3(-2.f, 3.f, -4.f).normalize();
 inline Ray castRay(const FVec3& pos, const FVec3& dir)
 {
     float d = 0.0f;
-    FVec3 rp(truncf(pos.x), truncf(pos.y), truncf(pos.z));
-    FVec3 unit(fabsf(1 / dir.x), fabsf(1 / dir.y), fabsf(1 / dir.z));
+    FVec3 rp(_mm_round_ps(pos.mmvalue, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC));
+    FVec3 unit(_mm_div_ps(_mm_set_ps1(1.f), _mm_andnot_ps(_mm_set_ps1(-0.f), dir.mmvalue)));  // the _mm_rcp_ps is not accurate enough
     FVec3 step;
     FVec3 len;
 
@@ -23,7 +24,7 @@ inline Ray castRay(const FVec3& pos, const FVec3& dir)
     }
     else {
         step.x = -1;
-        len.x = dir.x == 0 ? INFINITY : (pos.x - rp.x) * unit.x;
+        len.x = (pos.x - rp.x) * unit.x;
     }
     if (dir.y > 0) {
         step.y = 1;
@@ -31,7 +32,7 @@ inline Ray castRay(const FVec3& pos, const FVec3& dir)
     }
     else {
         step.y = -1;
-        len.y = dir.y == 0 ? INFINITY : (pos.y - rp.y) * unit.y;
+        len.y = (pos.y - rp.y) * unit.y;
     }
     if (dir.z > 0) {
         step.z = 1;
@@ -39,7 +40,7 @@ inline Ray castRay(const FVec3& pos, const FVec3& dir)
     }
     else {
         step.z = -1;
-        len.z = dir.z == 0 ? INFINITY : (pos.z - rp.z) * unit.z;
+        len.z = (pos.z - rp.z) * unit.z;
     }
 
     if (rp.x < 0 || rp.x >= g_CHUNK_SIZE * g_MAP_SIZE || rp.y < 0 || rp.y >= g_CHUNK_SIZE * g_MAP_SIZE || rp.z < 0 || rp.z >= g_CHUNK_SIZE * g_MAP_SIZE)
@@ -56,10 +57,14 @@ inline Ray castRay(const FVec3& pos, const FVec3& dir)
 
             // check if the ray hit the block
             if (blk != 0)
-                return Ray(rp, (d + 1e-5f) * dir + pos, blk, d);
+                return Ray(rp, (d) * dir + pos, blk, d);
+
+            // check if we exceeded the max render distance
+            if (d > g_CAM_RENDER_DISTANCE)
+                return Ray(rp, d * dir + pos, 0, d);
 
             // move the ray
-            if (len.x < len.y && len.x < len.z) {
+            if (len.x < len.y && len.x < len.z && dir.x != 0.f) {
                 rp.x += step.x;
                 d = len.x;
                 len.x += unit.x;
@@ -72,7 +77,7 @@ inline Ray castRay(const FVec3& pos, const FVec3& dir)
                 if (rp.x >= g_CHUNK_SIZE)
                     break;
             }
-            else if (len.y < len.z) {
+            else if (len.y < len.z && dir.y != 0.f) {
                 rp.y += step.y;
                 d = len.y;
                 len.y += unit.y;
@@ -99,9 +104,6 @@ inline Ray castRay(const FVec3& pos, const FVec3& dir)
                     break;
             }
         }
-        // check if we exceeded the max render distance
-        if (d > g_CAM_RENDER_DISTANCE)
-            return Ray(rp, d * dir + pos, blk, d);
     }
 }
 
@@ -111,9 +113,9 @@ FVec3 getNormal(const FVec3& pos)
     // Chunk& chunk = g_World.getChunkArray()[_mm_extract_epi32(chunk_index, 0) + _mm_extract_epi32(chunk_index, 1) + _mm_extract_epi32(chunk_index, 2)];
     // FVec3 block_pos(std::fmodf(pos.x, g_CHUNK_SIZE), std::fmodf(pos.y, g_CHUNK_SIZE), std::fmodf(pos.z, g_CHUNK_SIZE));
     FVec3 norm(
-        (float)((g_World.getBlockP((POS)(pos.x - 2.5e-5f), (POS)pos.y, (POS)pos.z) == 0) - (g_World.getBlockP((POS)(pos.x + 2.5e-5f), (POS)pos.y, (POS)pos.z) == 0)),
-        (float)((g_World.getBlockP((POS)pos.x, (POS)(pos.y - 2.5e-5f), (POS)pos.z) == 0) - (g_World.getBlockP((POS)pos.x, (POS)(pos.y + 2.5e-5f), (POS)pos.z) == 0)),
-        (float)((g_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z - 2.5e-5f)) == 0) - (g_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z + 2.5e-5f)) == 0))
+        (float)((g_World.getBlockP((POS)(pos.x - 1.5e-5f), (POS)pos.y, (POS)pos.z) == 0) - (g_World.getBlockP((POS)(pos.x + 1.5e-5f), (POS)pos.y, (POS)pos.z) == 0)),
+        (float)((g_World.getBlockP((POS)pos.x, (POS)(pos.y - 1.5e-5f), (POS)pos.z) == 0) - (g_World.getBlockP((POS)pos.x, (POS)(pos.y + 1.5e-5f), (POS)pos.z) == 0)),
+        (float)((g_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z - 1.5e-5f)) == 0) - (g_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z + 1.5e-5f)) == 0))
     );
 
     return norm;
@@ -123,6 +125,7 @@ FVec3 getNormal(const FVec3& pos)
 FVec3 calculatePixel(float u, float v)
 {
 	FVec3 dir = rotateZ(rotateX(FVec3(u, 1, v).normalize(), g_Camera.m_Dir.x), g_Camera.m_Dir.z);
+    FVec3 final_color;
 
 	Ray sample_ray = castRay(g_Camera.m_Pos, dir);
 
@@ -140,16 +143,61 @@ FVec3 calculatePixel(float u, float v)
         // add sun to the sky
         sky += FVec3(grad);
 
-        return sky;
+        final_color = sky;
     }
     else
     {  // calculate the block
-        return getNormal(sample_ray.fpos) / 2.f + 0.5f;
+        final_color = getNormal(sample_ray.fpos) / 2.f + 0.5f;
+
+        // basic post-processing (fog)
+        float foggyness = std::expf(sample_ray.d - g_CAM_RENDER_DISTANCE) + 1.f;
+
+        final_color *= foggyness;
+    }
+
+    return final_color;
+}
+
+
+void renderRange(int start, int end)
+{
+    sf::Uint8* buffer = g_Window.getScreenBuffer();
+    uint16_t width = g_Window.getWidth(), height = g_Window.getHeight();
+    float u, v, ratio = ((float)width / height);
+    
+    for (uint16_t y = start; y < end; y++)
+    {
+        v = 1.f - ((float)y / height * 2.f);
+        for (uint16_t x = 0; x < width; x++)
+        {
+            u = ((float)x / width * 2.f - 1.f) * ratio;
+
+            FVec3 color = clamp(calculatePixel(u, v)) * 255.f;
+
+            buffer[y * width * 4 + x * 4] = (unsigned char)color.x;
+            buffer[y * width * 4 + x * 4 + 1] = (unsigned char)color.y;
+            buffer[y * width * 4 + x * 4 + 2] = (unsigned char)color.z;
+            buffer[y * width * 4 + x * 4 + 3] = 255;
+        }
     }
 }
 
 
-void render()
+void renderFullCon()
+{
+    int thread_count = std::thread::hardware_concurrency() / 4;
+    std::vector<std::thread> threads;
+    threads.reserve(thread_count);
+
+    for (int i = 0; i < thread_count; i++)
+        threads.emplace_back(std::thread(renderRange, (int)(g_Window.getHeight() * ((float)i / thread_count)), (int)(g_Window.getHeight() * ((float)(i + 1) / thread_count))));
+
+    for (auto& th : threads)
+        th.join();
+}
+
+
+void renderFull()
 {
 	sf::Uint8* buffer = g_Window.getScreenBuffer();
 	uint16_t width = g_Window.getWidth(), height = g_Window.getHeight();

@@ -1,164 +1,94 @@
 #pragma once
-#include <type_traits>
+#include <iostream>
 #include <cmath>
 
-#include "math.h"
 
-
-
+// Vector XYZ (vector 3)
 template<typename T>
 struct Vec3 {
 	T x, y, z;
 
-	Vec3(T a, T b, T c) { x = a; y = b; z = c; }
-	Vec3(T a) { x = a; y = a; z = a; }
 	Vec3() { x = 0; y = 0; z = 0; }
-	T len() { return sqrt(x * x + y * y + z * z); }
-	Vec3<T> norm() { float l = q_isqrt(x * x + y * y + z * z); return { x * l, y * l, z * l }; }
+	Vec3(T _x) { x = _x; y = _x; z = _x; }
+	Vec3(T _x, T _y) { x = _x; y = _y; z = 0; }
+	Vec3(T _x, T _y, T _z) { x = _x; y = _y; z = _z; }
+
+	float length() { return sqrtf(x * x + y * y + z * z); }
+	Vec3<T> norm() { float iL = 1 / sqrtf(x * x + y * y + z * z); return { (T)(x * iL), (T)(y * iL), (T)(z * iL) }; }
+	void normalize() { float iL = 1 / sqrtf(x * x + y * y + z * z); x *= iL; y *= iL; z *= iL; }
 };
 
-template<typename T1, typename T2>
-auto operator+(const Vec3<T1>& lhs, const Vec3<T2>& rhs) -> Vec3<decltype(std::declval<T1>() + std::declval<T2>())>
-{
-	return { lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z };
-}
+// TODO: transfer operators into struct scope
 
-template<typename T1, typename T2>
-auto operator-(const Vec3<T1>& lhs, const Vec3<T2>& rhs) -> Vec3<decltype(std::declval<T1>() - std::declval<T2>())>
-{
-	return { lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z };
-}
-
+// -Vec3
 template<typename T1>
-auto operator-(const Vec3<T1>& lhs) -> Vec3<decltype(-std::declval<T1>())>
-{
-	return { -lhs.x, -lhs.y, -lhs.z };
-}
+Vec3<T1> operator-(const Vec3<T1>& a) { return { -a.x, -a.y, -a.z }; }
 
+// Arithmetic operators with Vec3
 template<typename T1, typename T2>
-auto operator*(const Vec3<T1>& lhs, const Vec3<T2>& rhs) -> Vec3<decltype(std::declval<T1>() * std::declval<T2>())>
-{
-	return { lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z };
-}
-
+Vec3<T1> operator+(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
 template<typename T1, typename T2>
-auto operator/(const Vec3<T1>& lhs, const Vec3<T2>& rhs) -> Vec3<decltype(std::declval<T1>() / std::declval<T2>())>
-{
-	return { lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z };
-}
-
+Vec3<T1> operator-(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 template<typename T1, typename T2>
-Vec3<T1> operator/(const Vec3<T1>& vec, const T2& val)
-{
-	return { vec.x / val, vec.y / val, vec.z / val };
-}
-
+Vec3<T1> operator*(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x * b.x, a.y * b.y, a.z * b.z }; }
 template<typename T1, typename T2>
-Vec3<T1> operator/(const T2& val, const Vec3<T1>& vec)
-{
-	return { val / vec.x, val / vec.y, val / vec.z };
-}
+Vec3<T1> operator/(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x / b.x, a.y / b.y, a.z / b.z }; }
 
+// Assignation and arithmetic operators with Vec3
 template<typename T1, typename T2>
-Vec3<T1> operator*(const Vec3<T1>& vec, const T2& val)
-{
-	return { vec.x * val, vec.y * val, vec.z * val };
-}
-
+Vec3<T1>& operator+=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
 template<typename T1, typename T2>
-Vec3<T1> operator*(const T2& val, const Vec3<T1>& vec)
-{
-	return { vec.x * val, vec.y * val, vec.z * val };
-}
+Vec3<T1>& operator-=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
+template<typename T1, typename T2>
+Vec3<T1>& operator*=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
+template<typename T1, typename T2>
+Vec3<T1>& operator/=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
 
+// Arithmetic operators with T2
+template<typename T1, typename T2>
+Vec3<T1> operator+(const Vec3<T1>& a, T2 b) { return { a.x + b, a.y + b, a.z + b }; }
+template<typename T1, typename T2>
+Vec3<T1> operator-(const Vec3<T1>& a, T2 b) { return { a.x - b, a.y - b, a.z - b }; }
+template<typename T1, typename T2>
+Vec3<T1> operator*(const Vec3<T1>& a, T2 b) { return { a.x * b, a.y * b, a.z * b }; }
+template<typename T1, typename T2>
+Vec3<T1> operator/(const Vec3<T1>& a, T2 b) { return { a.x / b, a.y / b, a.z / b }; }
+
+// reverse of that
+template<typename T1, typename T2>
+Vec3<T1> operator+(T2 a, const Vec3<T1>& b) { return b + a; }
+template<typename T1, typename T2>
+Vec3<T1> operator-(T2 a, const Vec3<T1>& b) { return Vec3(a) - b; }
+template<typename T1, typename T2>
+Vec3<T1> operator*(T2 a, const Vec3<T1>& b) { return b * a; }
+template<typename T1, typename T2>
+Vec3<T1> operator/(T2 a, const Vec3<T1>& b) { return Vec3(a) / b; }
+
+// Assignation and arithmetic operators with T2
+template<typename T1, typename T2>
+Vec3<T1>& operator+=(Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return a; }
+template<typename T1, typename T2>
+Vec3<T1>& operator-=(Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return a; }
+template<typename T1, typename T2>
+Vec3<T1>& operator*=(Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return a; }
+template<typename T1, typename T2>
+Vec3<T1>& operator/=(Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return a; }
+
+// Textual representation
 template<typename T>
-struct Vec2 {
-	T x, y;
+std::ostream& operator<<(std::ostream& os, const Vec3<T>& v)
+{
+	os << "Vec3(" << v.x << ", " << v.y << ", " << v.z << ")";
+	return os;
+}
 
-	Vec2(T a, T b) { x = a; y = b; }
-	Vec2(T a) { x = a; y = a; }
-	Vec2() { x = 0; y = 0; }
-	T len() { return sqrt(x * x + y * y); }
-	Vec3<T> norm() { float l = q_isqrt(x * x + y * y); return { x * l, y * l }; }
-};
-
+// Dot product
 template<typename T1, typename T2>
-auto operator+(const Vec2<T1>& lhs, const Vec2<T2>& rhs) -> Vec2<decltype(std::declval<T1>() + std::declval<T2>())>
+float dotProduct(const Vec3<T1>& a, const Vec3<T2>& b)
 {
-	return { lhs.x + rhs.x, lhs.y + rhs.y };
-}
-
-template<typename T1, typename T2>
-auto operator-(const Vec2<T1>& lhs, const Vec2<T2>& rhs) -> Vec2<decltype(std::declval<T1>() - std::declval<T2>())>
-{
-	return { lhs.x - rhs.x, lhs.y - rhs.y };
-}
-
-template<typename T1>
-auto operator-(const Vec2<T1>& lhs) -> Vec2<decltype(-std::declval<T1>())>
-{
-	return { -lhs.x, -lhs.y };
-}
-
-template<typename T1, typename T2>
-auto operator*(const Vec2<T1>& lhs, const Vec2<T2>& rhs) -> Vec2<decltype(std::declval<T1>()* std::declval<T2>())>
-{
-	return { lhs.x * rhs.x, lhs.y * rhs.y };
-}
-
-template<typename T1, typename T2>
-auto operator/(const Vec2<T1>& lhs, const Vec2<T2>& rhs) -> Vec2<decltype(std::declval<T1>() / std::declval<T2>())>
-{
-	return { lhs.x / rhs.x, lhs.y / rhs.y };
-}
-
-template<typename T1, typename T2>
-Vec2<T1> operator/(const Vec2<T1>& vec, const T2& val)
-{
-	return { vec.x / val, vec.y / val };
-}
-
-template<typename T1, typename T2>
-Vec2<T1> operator/(const T2& val, const Vec2<T1>& vec)
-{
-	return { val / vec.x, val / vec.y };
-}
-
-template<typename T1, typename T2>
-Vec2<T1> operator*(const Vec2<T1>& vec, const T2& val)
-{
-	return { vec.x * val, vec.y * val };
-}
-
-template<typename T1, typename T2>
-Vec2<T1> operator*(const T2& val, const Vec2<T1>& vec)
-{
-	return { vec.x * val, vec.y * val };
-}
-
-
-template<typename T>
-float dist(const Vec3<T>& a, const Vec3<T>& b) {
-	return sqrtf((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
-}
-
-template<typename T>
-float vecDot(const Vec3<T>& a, const Vec3<T>& b) {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-template<typename T>
-float dist(const Vec2<T>& a, const Vec2<T>& b) {
-	return sqrtf((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
-}
 
-template<typename T>
-float vecDot(const Vec2<T>& a, const Vec2<T>& b) {
-	return a.x * b.x + a.y * b.y;
-}
-
-
-Vec3<float> rotateX(const Vec3<float>& point, float angle);
-Vec3<float> rotateY(const Vec3<float>& point, float angle);
-Vec3<float> rotateZ(const Vec3<float>& point, float angle);
-Vec3<float> rotateXYZ(const Vec3<float>& point, const Vec3<float>& angle);
+typedef Vec3<float> Vec3f;
+typedef Vec3<int> Vec3i;

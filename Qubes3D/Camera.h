@@ -8,11 +8,11 @@ class Camera
 {
 public:
 	Camera();
-	Camera(FVec3 _pos);
-	Camera(FVec3 _pos, FVec3 _dir);
+	Camera(Vec3<float> _pos);
+	Camera(Vec3<float> _pos, Vec3<float> _dir);
 
-	FVec3 m_Pos;
-	FVec3 m_Dir;
+	Vec3<float> m_Pos;
+	Vec3<float> m_Dir;
 
 	void onUpdate(float fd);
 };

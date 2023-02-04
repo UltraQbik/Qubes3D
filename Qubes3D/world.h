@@ -13,10 +13,12 @@ public:
 
 	BID getBlock(const Vec3<POS>& _pos);
 	BID getBlock(POS _x, POS _y, POS _z);
+	BID getBlockP(const Vec3<POS>& _pos);
 	BID getBlockP(POS _x, POS _y, POS _z);
 
 	void setBlock(const Vec3<POS>& _pos, BID _id);
 	void setBlock(POS _x, POS _y, POS _z, BID _id);
+	void setBlockP(const Vec3<POS>& _pos, BID _id);
 	void setBlockP(POS _x, POS _y, POS _z, BID _id);
 private:
 	std::vector<BID> m_BlockArray;
@@ -31,14 +33,17 @@ public:
 
 	Chunk& getChunk(const Vec3<POS>& _pos);
 	Chunk& getChunk(POS _x, POS _y, POS _z);
+	Chunk& getChunkP(const Vec3<POS>& _pos);
 	Chunk& getChunkP(POS _x, POS _y, POS _z);
 
 	BID getBlock(const Vec3<POS>& _pos);
 	BID getBlock(POS _x, POS _y, POS _z);
+	BID getBlockP(const Vec3<POS>& _pos);
 	BID getBlockP(POS _x, POS _y, POS _z);
 
 	void setBlock(const Vec3<POS>& _pos, BID _id);
 	void setBlock(POS _x, POS _y, POS _z, BID _id);
+	void setBlockP(const Vec3<POS>& _pos, BID _id);
 	void setBlockP(POS _x, POS _y, POS _z, BID _id);
 private:
 	std::vector<Chunk> m_ChunkArray;

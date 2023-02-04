@@ -14,32 +14,16 @@
 
 Window g_Window(1280, 720, 75);
 World g_World;
-Camera g_Camera(FVec3(10.392f));
+Camera g_Camera(Vec3<float>(10.392f));
 
 
 int main()
 {
 	// generate world with some cubes in it
-	generateFlatWorld(g_World, 8);
-
-	// events
-	sf::Event ev;
+	generateFlatWorld(g_World, 16);
 
 	while (g_Window.getWindow().isOpen())
 	{
-        // event polling
-        while (g_Window.getWindow().pollEvent(ev)) {
-            switch (ev.type) {
-            case sf::Event::Closed:
-                g_Window.getWindow().close();
-                break;
-            case sf::Event::KeyPressed:
-                if (ev.key.code == sf::Keyboard::Escape)
-                    g_Window.getWindow().close();
-                break;
-            }
-        }
-
 		// Camera update
 		if (g_Window.getWindow().hasFocus())
 			g_Camera.onUpdate(g_Window.getDelta());

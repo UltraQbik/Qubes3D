@@ -7,20 +7,20 @@
 
 Camera::Camera()
 {
-	m_Pos = FVec3(0);
-	m_Dir = FVec3(0, 1, 0);
+	m_Pos = Vec3<float>(0);
+	m_Dir = Vec3<float>(0, 1, 0);
 }
 
-Camera::Camera(FVec3 _pos)
+Camera::Camera(Vec3<float> _pos)
 {
 	m_Pos = _pos;
-	m_Dir = FVec3(0, 1, 0);
+	m_Dir = Vec3<float>(0, 1, 0);
 }
 
-Camera::Camera(FVec3 _pos, FVec3 _dir)
+Camera::Camera(Vec3<float> _pos, Vec3<float> _dir)
 {
 	m_Pos = _pos;
-	m_Dir = _dir.normalize();
+	m_Dir = _dir.norm();
 }
 
 
@@ -61,5 +61,34 @@ void Camera::onUpdate(float fd)
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
 		m_Pos.z -= movement_speed;
+	}
+
+	// Check for events (god this looks awful)
+	sf::Event ev;
+	while (g_Window.getWindow().pollEvent(ev))
+	{
+		switch (ev.type)
+		{
+		case sf::Event::Closed:
+			g_Window.getWindow().close();
+			break;
+		case sf::Event::KeyPressed:
+			if (ev.key.code == sf::Keyboard::Escape)
+				g_Window.getWindow().close();
+			break;
+		case sf::Event::MouseButtonPressed:
+			if (ev.mouseButton.button == sf::Mouse::Left)
+			{
+				Ray ray = castRay(m_Pos, rotateZ(rotateX(Vec3<float>(0, 1, 0), m_Dir.x), m_Dir.z));
+				Vec3<float> normal = getNormal(ray.fpos);
+				Vec3<POS> block_pos = ray.ipos - Vec3<POS>((POS)normal.x, (POS)normal.y, (POS)normal.z);
+				g_World.setBlockP(block_pos, 1);
+			}
+			if (ev.mouseButton.button == sf::Mouse::Right)
+			{
+				Ray ray = castRay(m_Pos, rotateZ(rotateX(Vec3<float>(0, 1, 0), m_Dir.x), m_Dir.z));
+				g_World.setBlockP(ray.ipos, 0);
+			}
+		}
 	}
 }

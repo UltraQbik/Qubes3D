@@ -18,6 +18,13 @@ BID Chunk::getBlock(POS _x, POS _y, POS _z)
 	return m_BlockArray[_x + _y * g_CHUNK_SIZE + _z * g_CHUNK_SIZE * g_CHUNK_SIZE];
 }
 
+BID Chunk::getBlockP(const Vec3<POS>& _pos)
+{
+	if (_pos.x > -1 && _pos.x < g_CHUNK_SIZE && _pos.y > -1 && _pos.y < g_CHUNK_SIZE && _pos.z > -1 && _pos.z < g_CHUNK_SIZE)
+		return m_BlockArray[_pos.x + _pos.y * g_CHUNK_SIZE + _pos.z * g_CHUNK_SIZE * g_CHUNK_SIZE];
+	return 0;
+}
+
 BID Chunk::getBlockP(POS _x, POS _y, POS _z)
 {
 	if (_x > -1 && _x < g_CHUNK_SIZE && _y > -1 && _y < g_CHUNK_SIZE && _z > -1 && _z < g_CHUNK_SIZE)
@@ -34,6 +41,12 @@ void Chunk::setBlock(const Vec3<POS>& _pos, BID _id)
 void Chunk::setBlock(POS _x, POS _y, POS _z, BID _id)
 {
 	m_BlockArray[_x + _y * g_CHUNK_SIZE + _z * g_CHUNK_SIZE * g_CHUNK_SIZE] = _id;
+}
+
+void Chunk::setBlockP(const Vec3<POS>& _pos, BID _id)
+{
+	if (_pos.x > -1 && _pos.x < g_CHUNK_SIZE && _pos.y > -1 && _pos.y < g_CHUNK_SIZE && _pos.z > -1 && _pos.z < g_CHUNK_SIZE)
+		m_BlockArray[_pos.x + _pos.y * g_CHUNK_SIZE + _pos.z * g_CHUNK_SIZE * g_CHUNK_SIZE] = _id;
 }
 
 void Chunk::setBlockP(POS _x, POS _y, POS _z, BID _id)
@@ -60,6 +73,14 @@ Chunk& World::getChunk(POS _x, POS _y, POS _z)
 	return m_ChunkArray[(_x >> g_CHUNK_RSH) + (_y >> g_CHUNK_RSH) * g_MAP_SIZE + (_z >> g_CHUNK_RSH) * g_MAP_SIZE * g_MAP_SIZE];
 }
 
+Chunk& World::getChunkP(const Vec3<POS>& _pos)
+{
+	POS x = _pos.x >> g_CHUNK_RSH, y = _pos.y >> g_CHUNK_RSH, z = _pos.z >> g_CHUNK_RSH;
+	if (x > -1 && x < g_MAP_SIZE && y > -1 && y < g_MAP_SIZE && z > -1 && z < g_MAP_SIZE)
+		return m_ChunkArray[x + y * g_MAP_SIZE + z * g_MAP_SIZE * g_MAP_SIZE];
+	return m_ChunkArray[0];
+}
+
 Chunk& World::getChunkP(POS _x, POS _y, POS _z)
 {
 	POS x = _x >> g_CHUNK_RSH, y = _y >> g_CHUNK_RSH, z = _z >> g_CHUNK_RSH;
@@ -79,6 +100,17 @@ BID World::getBlock(POS _x, POS _y, POS _z)
 {
 	Chunk& chunk = m_ChunkArray[((POS)_x >> g_CHUNK_RSH) + ((POS)_y >> g_CHUNK_RSH) * g_MAP_SIZE + ((POS)_z >> g_CHUNK_RSH) * g_MAP_SIZE * g_MAP_SIZE];
 	return chunk.getBlock(_x % g_CHUNK_SIZE, _y % g_CHUNK_SIZE, _z % g_CHUNK_SIZE);
+}
+
+BID World::getBlockP(const Vec3<POS>& _pos)
+{
+	POS x = _pos.x >> g_CHUNK_RSH, y = _pos.y >> g_CHUNK_RSH, z = _pos.z >> g_CHUNK_RSH;
+	if (x > -1 && x < g_MAP_SIZE && y > -1 && y < g_MAP_SIZE && z > -1 && z < g_MAP_SIZE)
+	{
+		Chunk& chunk = m_ChunkArray[x + y * g_MAP_SIZE + z * g_MAP_SIZE * g_MAP_SIZE];
+		return chunk.getBlock(_pos.x % g_CHUNK_SIZE, _pos.y % g_CHUNK_SIZE, _pos.z % g_CHUNK_SIZE);
+	}
+	return 0;
 }
 
 BID World::getBlockP(POS _x, POS _y, POS _z)
@@ -103,6 +135,16 @@ void World::setBlock(POS _x, POS _y, POS _z, BID _id)
 {
 	Chunk& chunk = m_ChunkArray[((POS)_x >> g_CHUNK_RSH) + ((POS)_y >> g_CHUNK_RSH) * g_MAP_SIZE + ((POS)_z >> g_CHUNK_RSH) * g_MAP_SIZE * g_MAP_SIZE];
 	chunk.setBlock(_x % g_CHUNK_SIZE, _y % g_CHUNK_SIZE, _z % g_CHUNK_SIZE, _id);
+}
+
+void World::setBlockP(const Vec3<POS>& _pos, BID _id)
+{
+	POS x = _pos.x >> g_CHUNK_RSH, y = _pos.y >> g_CHUNK_RSH, z = _pos.z >> g_CHUNK_RSH;
+	if (x > -1 && x < g_MAP_SIZE && y > -1 && y < g_MAP_SIZE && z > -1 && z < g_MAP_SIZE)
+	{
+		Chunk& chunk = m_ChunkArray[x + y * g_MAP_SIZE + z * g_MAP_SIZE * g_MAP_SIZE];
+		chunk.setBlock(_pos.x % g_CHUNK_SIZE, _pos.y % g_CHUNK_SIZE, _pos.z % g_CHUNK_SIZE, _id);
+	}
 }
 
 void World::setBlockP(POS _x, POS _y, POS _z, BID _id)

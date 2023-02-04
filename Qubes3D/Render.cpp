@@ -1,16 +1,9 @@
-#include <thread>
 #include "Render.h"
-#include "Camera.h"
-#include "Window.h"
-#include "World.h"
+#include "Game.h"
 #include "AMath.h"
 
 
-// temporary for tests
-extern Vec3<float> g_Sun = Vec3<float>(-2.f, 3.f, -4.f).norm();
-
-
-inline Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
+Ray Game::castRay(const Vec3f& pos, const Vec3f& dir)
 {
     Vec3<POS> ipos((POS)pos.x, (POS)pos.y, (POS)pos.z);
 
@@ -20,8 +13,8 @@ inline Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
 
     Vec3<POS> bpos;
     Vec3<POS> step;
-    Vec3<float> unit(fabsf(1.f / dir.x), fabsf(1.f / dir.y), fabsf(1.f / dir.z));
-    Vec3<float> len;
+    Vec3f unit(fabsf(1.f / dir.x), fabsf(1.f / dir.y), fabsf(1.f / dir.z));
+    Vec3f len;
     float d = 0.f;
 
     if (dir.x > 0)
@@ -58,7 +51,7 @@ inline Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
     while (true)
     {
         // fetch new chunk
-        Chunk& fetched_chunk = g_World.getChunk(ipos);
+        Chunk& fetched_chunk = m_World.getChunk(ipos);
 
         // calculate block position
         bpos.x = ipos.x % g_CHUNK_SIZE;
@@ -125,24 +118,24 @@ inline Ray castRay(const Vec3<float>& pos, const Vec3<float>& dir)
 }
 
 
-Vec3<float> getNormal(const Vec3<float>& pos)
+Vec3f Game::getNormal(const Vec3f& pos)
 {
-    Vec3<float> norm(
-        (float)((g_World.getBlockP((POS)(pos.x - 1.5e-5f), (POS)pos.y, (POS)pos.z) == 0) - (g_World.getBlockP((POS)(pos.x + 1.5e-5f), (POS)pos.y, (POS)pos.z) == 0)),
-        (float)((g_World.getBlockP((POS)pos.x, (POS)(pos.y - 1.5e-5f), (POS)pos.z) == 0) - (g_World.getBlockP((POS)pos.x, (POS)(pos.y + 1.5e-5f), (POS)pos.z) == 0)),
-        (float)((g_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z - 1.5e-5f)) == 0) - (g_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z + 1.5e-5f)) == 0))
+    Vec3f norm(
+        (float)((m_World.getBlockP((POS)(pos.x - 1.5e-5f), (POS)pos.y, (POS)pos.z) == 0) - (m_World.getBlockP((POS)(pos.x + 1.5e-5f), (POS)pos.y, (POS)pos.z) == 0)),
+        (float)((m_World.getBlockP((POS)pos.x, (POS)(pos.y - 1.5e-5f), (POS)pos.z) == 0) - (m_World.getBlockP((POS)pos.x, (POS)(pos.y + 1.5e-5f), (POS)pos.z) == 0)),
+        (float)((m_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z - 1.5e-5f)) == 0) - (m_World.getBlockP((POS)pos.x, (POS)pos.y, (POS)(pos.z + 1.5e-5f)) == 0))
     );
 
     return norm;
 }
 
 
-Vec3<float> calculatePixel(float u, float v)
+Vec3f Game::calculatePixel(float u, float v)
 {
-	Vec3<float> dir = rotateZ(rotateX(Vec3<float>(u, 1, v).norm(), g_Camera.m_Dir.x), g_Camera.m_Dir.z);
-    Vec3<float> final_color;
+	Vec3f dir = rotateZ(rotateX(Vec3f(u, 1, v).norm(), m_Camera.m_Dir.x), m_Camera.m_Dir.z);
+    Vec3f final_color;
 
-	Ray sample_ray = castRay(g_Camera.m_Pos, dir);
+	Ray sample_ray = castRay(m_Camera.m_Pos, dir);
 
 	if (sample_ray.cid == 0)
     {  // calculate the sky
@@ -150,31 +143,31 @@ Vec3<float> calculatePixel(float u, float v)
         float grad = smoothstep(dir.z + 1.5f, 0.5f, 1.f, 0.f, 2.f);
 
         // calculate color gradient from (115, 135, 185) to (220, 240, 250)
-        Vec3<float> sky = (Vec3<float>(0.8627f, 0.9411f, 0.9803f) * grad) + (Vec3<float>(0.4509f, 0.5294f, 0.7254f) * (1.f - grad));
+        Vec3f sky = (Vec3f(0.8627f, 0.9411f, 0.9803f) * grad) + (Vec3f(0.4509f, 0.5294f, 0.7254f) * (1.f - grad));
 
         // calculate sun disc
-        grad = clamp((dir - g_Sun).length() - 1.9f, 0.f, 1.f);
+        grad = clamp((dir - m_Sun).length() - 1.9f, 0.f, 1.f);
 
         // add sun to the sky
-        sky += Vec3<float>(grad);
+        sky += Vec3f(grad);
 
         final_color = sky;
     }
     else
     {  // calculate the block
         // calculate dot product with sun
-        float sun_dot = clamp(dotProduct(getNormal(sample_ray.fpos), g_Sun), 0.1f, 1.f);
+        float sun_dot = clamp(dotProduct(getNormal(sample_ray.fpos), m_Sun), 0.1f, 1.f);
 
         // cast shadow ray in direction, opposite to the sun
-        Ray shadow_ray = castRay(sample_ray.fpos - dir * 1e-5f, -g_Sun);
+        Ray shadow_ray = castRay(sample_ray.fpos - dir * 1e-5f, -m_Sun);
 
         if (shadow_ray.cid == 0)
         {
-            final_color = Vec3<float>(sun_dot);
+            final_color = Vec3f(sun_dot);
         }
         else
         {
-            final_color = Vec3<float>(0.1f);
+            final_color = Vec3f(0.1f);
         }
     }
 
@@ -182,39 +175,23 @@ Vec3<float> calculatePixel(float u, float v)
 }
 
 
-void renderRange(int start, int end)
+void Game::renderRange(int start, int end)
 {
-    sf::Uint8* buffer = g_Window.getScreenBuffer();
-    uint16_t width = g_Window.getWidth(), height = g_Window.getHeight();
-    float u, v, ratio = ((float)width / height);
+    float u, v, ratio = ((float)g_WINDOW_WIDTH / g_WINDOW_HEIGHT);
     
     for (uint16_t y = start; y < end; y++)
     {
-        v = 1.f - ((float)y / height * 2.f);
-        for (uint16_t x = 0; x < width; x++)
+        v = 1.f - ((float)y / g_WINDOW_HEIGHT * 2.f);
+        for (uint16_t x = 0; x < g_WINDOW_WIDTH; x++)
         {
-            u = ((float)x / width * 2.f - 1.f) * ratio;
+            u = ((float)x / g_WINDOW_WIDTH * 2.f - 1.f) * ratio;
 
-            Vec3<float> color = clamp(calculatePixel(u, v)) * 255.f;
+            Vec3f color = clamp(calculatePixel(u, v)) * 255.f;
 
-            buffer[y * width * 4 + x * 4] = (unsigned char)color.x;
-            buffer[y * width * 4 + x * 4 + 1] = (unsigned char)color.y;
-            buffer[y * width * 4 + x * 4 + 2] = (unsigned char)color.z;
-            buffer[y * width * 4 + x * 4 + 3] = 255;
+            m_ScreenBuffer[y * g_WINDOW_WIDTH * 4 + x * 4] = (unsigned char)color.x;
+            m_ScreenBuffer[y * g_WINDOW_WIDTH * 4 + x * 4 + 1] = (unsigned char)color.y;
+            m_ScreenBuffer[y * g_WINDOW_WIDTH * 4 + x * 4 + 2] = (unsigned char)color.z;
+            m_ScreenBuffer[y * g_WINDOW_WIDTH * 4 + x * 4 + 3] = 255;
         }
     }
-}
-
-
-void renderFullCon()
-{
-    int thread_count = std::thread::hardware_concurrency() / 4;
-    std::vector<std::thread> threads;
-    threads.reserve(thread_count);
-
-    for (int i = 0; i < thread_count; i++)
-        threads.emplace_back(std::thread(renderRange, (int)(g_Window.getHeight() * ((float)i / thread_count)), (int)(g_Window.getHeight() * ((float)(i + 1) / thread_count))));
-
-    for (auto& th : threads)
-        th.join();
 }

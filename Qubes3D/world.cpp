@@ -1,7 +1,7 @@
 #include "World.h"
 
 
-// World chunks
+/// World chunks
 Chunk::Chunk()
 {
 	m_BlockArray.resize((uint64_t)g_CHUNK_SIZE * g_CHUNK_SIZE * g_CHUNK_SIZE);
@@ -56,7 +56,7 @@ void Chunk::setBlockP(POS _x, POS _y, POS _z, BID _id)
 }
 
 
-// The World
+/// The World
 World::World()
 {
 	m_ChunkArray.resize((uint64_t)g_MAP_SIZE * g_MAP_SIZE * g_MAP_SIZE);

@@ -13,82 +13,75 @@ struct Vec3 {
 	Vec3(T _x, T _y) { x = _x; y = _y; z = 0; }
 	Vec3(T _x, T _y, T _z) { x = _x; y = _y; z = _z; }
 
-	float length() { return sqrtf(x * x + y * y + z * z); }
-	Vec3<T> norm() { float iL = 1 / sqrtf(x * x + y * y + z * z); return { (T)(x * iL), (T)(y * iL), (T)(z * iL) }; }
-	void normalize() { float iL = 1 / sqrtf(x * x + y * y + z * z); x *= iL; y *= iL; z *= iL; }
+	// Arithmetic operators with Vec3
+	template<typename To>
+	Vec3<T> operator+(const Vec3<To>& o) const { return { this->x + o.x, this->y + o.y, this->z + o.z }; }
+	template<typename To>
+	Vec3<T> operator-(const Vec3<To>& o) const { return { this->x - o.x, this->y - o.y, this->z - o.z }; }
+	template<typename To>
+	Vec3<T> operator*(const Vec3<To>& o) const { return { this->x * o.x, this->y * o.y, this->z * o.z }; }
+	template<typename To>
+	Vec3<T> operator/(const Vec3<To>& o) const { return { this->x / o.x, this->y / o.y, this->z / o.z }; }
+
+	// Assignation and arithmetic operators with Vec3
+	template<typename To>
+	Vec3<T>& operator+=(const Vec3<To>& o) { this->x += o.x; this->y += o.y; this->z += o.z; return *this; }
+	template<typename To>
+	Vec3<T>& operator-=(const Vec3<To>& o) { this->x -= o.x; this->y -= o.y; this->z -= o.z; return *this; }
+	template<typename To>
+	Vec3<T>& operator*=(const Vec3<To>& o) { this->x *= o.x; this->y *= o.y; this->z *= o.z; return *this; }
+	template<typename To>
+	Vec3<T>& operator/=(const Vec3<To>& o) { this->x /= o.x; this->y /= o.y; this->z /= o.z; return *this; }
+
+	// Arithmetic operators with To
+	template<typename To>
+	Vec3<T> operator+(To o) const { return { this->x + o, this->y + o, this->z + o }; }
+	template<typename To>
+	Vec3<T> operator-(To o) const { return { this->x - o, this->y - o, this->z - o }; }
+	template<typename To>
+	Vec3<T> operator*(To o) const { return { this->x * o, this->y * o, this->z * o }; }
+	template<typename To>
+	Vec3<T> operator/(To o) const { return { this->x / o, this->y / o, this->z / o }; }
+
+	// Assignation and arithmetic operators with T2
+	template<typename To>
+	Vec3<T>& operator+=(To o) { this->x += o; this->y += o; this->z += o; return *this; }
+	template<typename To>
+	Vec3<T>& operator-=(To o) { this->x -= o; this->y -= o; this->z -= o; return *this; }
+	template<typename To>
+	Vec3<T>& operator*=(To o) { this->x *= o; this->y *= o; this->z *= o; return *this; }
+	template<typename To>
+	Vec3<T>& operator/=(To o) { this->x /= o; this->y /= o; this->z /= o; return *this; }
+
+	// Dot product
+	template<typename To>
+	T dot(const Vec3<To>& o) const { return this->x * o.x + this->y * o.y + this->z * o.z; }
+
+	// Length of the vector
+	T length() const { return sqrt(this->x * this->x + this->y * this->y + this->z * this->z); }
+
+	// Vector divided by it's length (unit vector)
+	Vec3<T> norm() const { T iL = 1 / this->length(); return *this * iL; }
+
+	// Textual representation
+	friend std::ostream& operator<<(std::ostream& os, const Vec3<T>& v) { os << "Vec3(" << v.x << ", " << v.y << ", " << v.z << ")"; return os; }
+
 };
 
-// TODO: transfer operators into struct scope
-
 // -Vec3
-template<typename T1>
-Vec3<T1> operator-(const Vec3<T1>& a) { return { -a.x, -a.y, -a.z }; }
+template<typename T>
+Vec3<T> operator-(const Vec3<T>& a) { return { -a.x, -a.y, -a.z }; }
 
-// Arithmetic operators with Vec3
-template<typename T1, typename T2>
-Vec3<T1> operator+(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
-template<typename T1, typename T2>
-Vec3<T1> operator-(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
-template<typename T1, typename T2>
-Vec3<T1> operator*(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x * b.x, a.y * b.y, a.z * b.z }; }
-template<typename T1, typename T2>
-Vec3<T1> operator/(const Vec3<T1>& a, const Vec3<T2>& b) { return { a.x / b.x, a.y / b.y, a.z / b.z }; }
-
-// Assignation and arithmetic operators with Vec3
-template<typename T1, typename T2>
-Vec3<T1>& operator+=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
-template<typename T1, typename T2>
-Vec3<T1>& operator-=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
-template<typename T1, typename T2>
-Vec3<T1>& operator*=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
-template<typename T1, typename T2>
-Vec3<T1>& operator/=(Vec3<T1>& a, const Vec3<T2>& b) { a.x = a.x + b.x; a.y = a.y + b.y; a.z = a.z + b.z; return a; }
-
-// Arithmetic operators with T2
-template<typename T1, typename T2>
-Vec3<T1> operator+(const Vec3<T1>& a, T2 b) { return { a.x + b, a.y + b, a.z + b }; }
-template<typename T1, typename T2>
-Vec3<T1> operator-(const Vec3<T1>& a, T2 b) { return { a.x - b, a.y - b, a.z - b }; }
-template<typename T1, typename T2>
-Vec3<T1> operator*(const Vec3<T1>& a, T2 b) { return { a.x * b, a.y * b, a.z * b }; }
-template<typename T1, typename T2>
-Vec3<T1> operator/(const Vec3<T1>& a, T2 b) { return { a.x / b, a.y / b, a.z / b }; }
-
-// reverse of that
+// Arithmetic operators with To (reverse)
 template<typename T1, typename T2>
 Vec3<T1> operator+(T2 a, const Vec3<T1>& b) { return b + a; }
 template<typename T1, typename T2>
-Vec3<T1> operator-(T2 a, const Vec3<T1>& b) { return Vec3(a) - b; }
+Vec3<T1> operator-(T2 a, const Vec3<T1>& b) { return Vec3<T1>(a) - b; }
 template<typename T1, typename T2>
 Vec3<T1> operator*(T2 a, const Vec3<T1>& b) { return b * a; }
 template<typename T1, typename T2>
-Vec3<T1> operator/(T2 a, const Vec3<T1>& b) { return Vec3(a) / b; }
+Vec3<T1> operator/(T2 a, const Vec3<T1>& b) { return Vec3<T1>(a) / b; }
 
-// Assignation and arithmetic operators with T2
-template<typename T1, typename T2>
-Vec3<T1>& operator+=(Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return a; }
-template<typename T1, typename T2>
-Vec3<T1>& operator-=(Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return a; }
-template<typename T1, typename T2>
-Vec3<T1>& operator*=(Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return a; }
-template<typename T1, typename T2>
-Vec3<T1>& operator/=(Vec3<T1>& a, T2 b) { a.x = a.x + b; a.y = a.y + b; a.z = a.z + b; return a; }
-
-// Textual representation
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const Vec3<T>& v)
-{
-	os << "Vec3(" << v.x << ", " << v.y << ", " << v.z << ")";
-	return os;
-}
-
-// Dot product
-template<typename T1, typename T2>
-float dotProduct(const Vec3<T1>& a, const Vec3<T2>& b)
-{
-	return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-
+// Typedefs
 typedef Vec3<float> Vec3f;
 typedef Vec3<int> Vec3i;

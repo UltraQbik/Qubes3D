@@ -15,39 +15,42 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="World.cpp">
+    <ClCompile Include="world.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Render.cpp">
+    <ClCompile Include="render.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
+    <ClCompile Include="game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AMath.cpp">
+    <ClCompile Include="amath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Vector.h">
+    <ClInclude Include="vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Config.h">
+    <ClInclude Include="config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="World.h">
+    <ClInclude Include="world.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render.h">
+    <ClInclude Include="render.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AMath.h">
+    <ClInclude Include="amath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
+    <ClInclude Include="game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

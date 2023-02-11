@@ -136,19 +136,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AMath.cpp" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Render.cpp" />
-    <ClCompile Include="World.cpp" />
+    <ClCompile Include="amath.cpp" />
+    <ClCompile Include="game.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="render.cpp" />
+    <ClCompile Include="world.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Config.h" />
-    <ClInclude Include="AMath.h" />
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="Render.h" />
-    <ClInclude Include="Vector.h" />
-    <ClInclude Include="World.h" />
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="amath.h" />
+    <ClInclude Include="game.h" />
+    <ClInclude Include="render.h" />
+    <ClInclude Include="vector.h" />
+    <ClInclude Include="world.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

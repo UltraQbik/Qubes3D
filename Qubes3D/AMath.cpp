@@ -1,4 +1,4 @@
-#include "AMath.h"
+#include "amath.h"
 
 /// Rotations
 Vec3f rotateX(const Vec3f& point, float angle)

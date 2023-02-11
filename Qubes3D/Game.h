@@ -2,19 +2,11 @@
 #include <chrono>
 #include <SFML/Graphics.hpp>
 
-#include "Vector.h"
-#include "Render.h"
-#include "World.h"
+#include "vector.h"
+#include "render.h"
+#include "camera.h"
+#include "world.h"
 
-
-class Camera
-{
-public:
-	Camera();
-
-	Vec3f m_Pos;
-	Vec3f m_Dir;
-};
 
 class Game
 {

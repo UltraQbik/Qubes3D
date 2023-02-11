@@ -1,6 +1,6 @@
-#include "Render.h"
-#include "Game.h"
-#include "AMath.h"
+#include "render.h"
+#include "game.h"
+#include "amath.h"
 
 
 Ray Game::castRay(const Vec3f& pos, const Vec3f& dir)
@@ -156,7 +156,7 @@ Vec3f Game::calculatePixel(float u, float v)
     else
     {  // calculate the block
         // calculate dot product with sun
-        float sun_dot = clamp(dotProduct(getNormal(sample_ray.fpos), m_Sun), 0.1f, 1.f);
+        float sun_dot = clamp(getNormal(sample_ray.fpos).dot(m_Sun), 0.1f, 1.f);
 
         // cast shadow ray in direction, opposite to the sun
         Ray shadow_ray = castRay(sample_ray.fpos - dir * 1e-5f, -m_Sun);

@@ -1,14 +1,7 @@
 #include <thread>
-#include "Game.h"
-#include "Render.h"
-#include "AMath.h"
-
-
-Camera::Camera()
-{
-	m_Pos = Vec3f(0);
-	m_Dir = Vec3f(0, 1, 0);
-}
+#include "game.h"
+#include "render.h"
+#include "amath.h"
 
 
 Game::Game()

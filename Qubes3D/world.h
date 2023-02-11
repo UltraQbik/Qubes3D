@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "Config.h"
-#include "Vector.h"
+#include "config.h"
+#include "vector.h"
 
 
 struct Chunk
